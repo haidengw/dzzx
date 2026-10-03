@@ -746,7 +746,7 @@ $('btnIoConfirm').addEventListener('click',()=>{
     profile=Object.assign(profile,obj);initProfile();saveProfile();renderCharMenu();renderMenuExp();
     ioPanel.classList.add('hidden');menuEl.classList.remove('hidden');
     beep(880,.1,'sine',.06);setTimeout(()=>beep(1200,.14,'sine',.06),90);
-  }catch(err){ioHint.textContent='⚠ 战绩代码无效，请检查后重试';beep(180,.2,'sawtooth',.06);}
+  }catch(err){ioHint.textContent='⚠ 战绩码无效：' + (err && err.message ? err.message : '格式不对') + '（共 ' + ioText.value.trim().length + ' 字符）';beep(180,.2,'sawtooth',.06);}
 });
 
 function tryBuyShop(idx){
@@ -5611,7 +5611,7 @@ loadProfile();
         safeBeep(880, .1);
         setTimeout(function(){ safeBeep(1200, .14); }, 90);
       }catch(err){
-        ioHint.textContent = '⚠ 战绩代码无效，请检查后重试';
+        ioHint.textContent = '⚠ 战绩码无效：' + (err && err.message ? err.message : '格式不对') + '（共 ' + ioText.value.trim().length + ' 字符）';
         safeBeep(180, .2, 'sawtooth');
       }
     });
@@ -10082,6 +10082,134 @@ requestAnimationFrame(loop);
     forceCheatExt: function () { buildCheatExt(); return !!document.getElementById('czExt'); }
   };
 
+  /* =======================================================================
+     v2.0 · 战绩码互传加固
+     -----------------------------------------------------------------------
+     作者报「战绩码同版本互传失效」。把能想到的输入形态全测了一遍
+     （紧凑码 / 明文 base64 / 码里插换行或空格 / 首尾带全角空格与引号 / 直接贴 JSON 原文），
+     结论：紧凑格式本身是好的（`DZ.unpack(DZ.pack(x))` 完全对称），
+     但**解码只认两种形态**，任何别的粘贴方式都只会得到一句含糊的"无效"。
+     这里做四件事：
+       ① 解码分层容错：紧凑包 → JSON 原文 → 明文 base64 → base64url 归一化，
+          并且先把空白（含全角空格/不换行空格）和首尾引号统统清掉；
+       ② 失败时抛出**具体原因**（配合 upgrade-parent.mjs 的 ⑧ 一起显示出来）；
+       ③ 面板加「📋 复制」按钮 —— 手机上长按选中很容易漏字符，这是互传失败最常见的原因；
+       ④ 导入成功后弹一条确认，明确告诉玩家到底导进来了什么。
+     ======================================================================= */
+  (function () {
+    var _decPrev = b64dec;                       /* 上一层：紧凑包 + 明文 base64 */
+    /* 解码成功后记一份，供下面的"导入确认"用。
+       ⚠ 不能用"面板开→关"当成功信号：手快的玩家 250ms 内就点完确认了，
+         轮询（350ms）根本看不到"开着"那一帧，浮层就永远不弹。 */
+    var lastDecoded = null, lastDecodedAt = 0;
+    b64dec = function (s) {
+      var raw = String(s == null ? '' : s).trim();
+      var flat = raw.replace(/[\s\u3000\u00a0]+/g, '').replace(/^["'`]+|["'`]+$/g, '');
+      if (!flat) throw new Error('码是空的');
+      var res = null;
+      /* ① 紧凑包（base64url） */
+      try { var o = DZ.unpack(flat); if (o && o.chars) res = JSON.stringify(o); } catch (e) {}
+      /* ② 直接把 JSON 原文贴进来 */
+      if (!res && flat.charAt(0) === '{') {
+        try { var j = JSON.parse(flat); if (j && j.chars) res = JSON.stringify(j); } catch (e) {}
+      }
+      /* ③ 明文 base64（旧格式） */
+      if (!res) {
+        try {
+          var out = _decPrev(flat);
+          try { var j2 = JSON.parse(out); if (j2 && j2.chars) res = JSON.stringify(j2); } catch (e) {}
+          if (!res) res = out;
+        } catch (e2) {
+          throw new Error('不认识的格式（' + flat.length + ' 字符，应当是导出时那串字符）');
+        }
+      }
+      try {
+        var chk = JSON.parse(res);
+        if (chk && chk.chars && typeof ioMode !== 'undefined' && ioMode === 'import') {
+          lastDecoded = chk; lastDecodedAt = Date.now();
+        }
+      } catch (e3) {}
+      return res;
+    };
+
+    /* ---- ③ 复制按钮（放在「取消 / 确认」左边） ---- */
+    function injectCopyBtn() {
+      try {
+        var anchor = document.getElementById('btnIoConfirm');
+        if (!anchor || !anchor.parentNode) return;
+        if (document.getElementById('dzIoCopy')) return;
+        var b = document.createElement('button');
+        b.id = 'dzIoCopy';
+        b.className = 'act small';
+        b.textContent = '📋 复制';
+        b.style.marginRight = '8px';
+        b.addEventListener('click', function () {
+          var t = document.getElementById('ioText');
+          var v = t ? t.value : '';
+          var say = function (ok) {
+            var h = document.getElementById('ioHint');
+            if (h) h.textContent = ok ? ('✓ 已复制 ' + v.length + ' 个字符，整段发给对方即可')
+                                      : '自动复制不可用，请长按输入框「全选 → 复制」';
+          };
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(v).then(function () { say(true); }, function () { say(false); });
+              return;
+            }
+          } catch (e) {}
+          try { if (t) t.select(); say(document.execCommand('copy')); } catch (e2) { say(false); }
+        });
+        anchor.parentNode.insertBefore(b, anchor);
+      } catch (e) {}
+    }
+    var ct = 0, ctTimer = setInterval(function () { injectCopyBtn(); if (++ct > 60) clearInterval(ctTimer); }, 500);
+
+    /* ---- ④ 导入成功后的确认（DOM 浮层，不依赖 canvas / 不在跑局也能看见） ---- */
+    function toast(msg, color) {
+      try {
+        var el = document.createElement('div');
+        el.textContent = msg;
+        el.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:12%;z-index:9999;' +
+          'padding:9px 14px;border-radius:9px;background:rgba(6,14,30,.95);border:1.5px solid ' +
+          (color || '#51cf66') + ';color:#eafff4;font:800 12px/1.45 inherit;text-align:center;' +
+          'box-shadow:0 8px 26px rgba(0,0,0,.55);pointer-events:none;max-width:86%;';
+        document.body.appendChild(el);
+        setTimeout(function () { try { el.parentNode.removeChild(el); } catch (e) {} }, 4500);
+      } catch (e) {}
+    }
+    /* 面板一关、又确实解析出了一份新战绩 → 弹确认。
+       ⚠ 不能用"面板开→关"当成功信号：手快的玩家 250ms 内就点完确认了，
+         350ms 的轮询根本看不到"开着"那一帧，浮层就永远不弹。 */
+    var toastAt = 0;
+    setInterval(function () {
+      var p = document.getElementById('ioPanel');
+      if (!p) return;
+      if (!p.classList.contains('hidden')) return;                      /* 面板还开着 */
+      if (ioMode !== 'import') return;
+      if (!lastDecoded || (Date.now() - lastDecodedAt) > 8000) return;  /* 没有新的成功解码 */
+      var h = document.getElementById('ioHint');
+      if (h && /无效|失败/.test(h.textContent || '')) { lastDecoded = null; return; }
+      if (Date.now() - toastAt < 2000) return;
+      toastAt = Date.now();
+      lastDecoded = null;
+      var lv = 1, n = 0, best = 0, sel = '?';
+      try {
+        var cd = getCharData(profile.selectedChar);
+        lv = cd ? cd.level : 1;
+        n = (profile.collections || []).length;
+        best = profile.best || 0;
+        sel = (CHARS[profile.selectedChar] && CHARS[profile.selectedChar].name) || profile.selectedChar;
+      } catch (e) {}
+      toast('✓ 战绩已导入：' + sel + ' Lv.' + lv + ' · 收藏 ' + n + ' 件 · 最高分 ' + best, '#51cf66');
+    }, 350);
+
+    /* ---- 导出提示里的版本号原来写死 v1.7.12，跟着实际版本走 ---- */
+    try {
+      var _hintOld = document.getElementById('ioHint');
+      void _hintOld;
+    } catch (e) {}
+  })();
+
   /* 导出提示里标一下压缩效果 */
   try {
     var _expBtn = document.getElementById('btnExport');
@@ -10093,8 +10221,9 @@ requestAnimationFrame(loop);
             var hint = document.getElementById('ioHint');
             if (t2 && t2.value && hint) {
               var raw = _b64enc(JSON.stringify(profile)).length, now = t2.value.length;
+              var tag = (typeof DZ !== 'undefined' && DZ.version) ? ('v' + DZ.version + ' 压缩码') : '压缩码';
               hint.textContent = '复制下方代码保存，可在任意设备导入' +
-                (now < raw ? '（v1.7.12 压缩码：' + now + ' / 原来 ' + raw + ' 字符）' : '');
+                (now < raw ? '（' + tag + '：' + now + ' / 原来 ' + raw + ' 字符）' : '');
             }
           } catch (e) {}
         }, 0);
