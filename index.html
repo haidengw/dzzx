@@ -16675,6 +16675,269 @@ requestAnimationFrame(loop);
   log('曲库就绪：内置 ' + libUrls().length + ' 首外链（首选 Kenny G 茉莉花）· 支持轮播/随机/单曲 + 自定义');
 })();
 
+
+/* ---------- src-parent/visits.js ---------- */
+/* =========================================================================
+   定中project v2.0.5 · 网页版访问量统计（今日 / 历史）
+   -------------------------------------------------------------------------
+   作者要求：「为小游戏加入一个访问量统计，显示日访问量，历史访问量，以截至今天访问量为 6069 算。」
+
+   ⚠ 纯静态页（GitHub Pages）**自己数不了自己的访问量** —— 没有后端可以落库。所以借一个免费计数服务：
+        abacus.jasoncameron.dev        （2026-10-04 我实测过：CORS `*`、JSON、限 30 次/10 秒）
+          自增  GET /hit/<namespace>/<key>  → {"value":N}
+          读取  GET /get/<namespace>/<key>  → {"value":N}（key 不存在则 404 {"error":"Key not found"}）
+          key 必须匹配 ^[A-Za-z0-9_\-.]{3,64}$（所以 2026-10-04 这种带横杠的日期可以直接当 key）
+      另外两个更老的同类服务（api.countapi.xyz / api.counterapi.dev）都**已经挂了**，实测无响应，别用。
+
+   两个计数器，互不干扰：
+      total          —— 统计上线以来「新增」的访问（含本次）
+      d-YYYY-MM-DD   —— 当天的访问；key 里带日期，**自然按天重置，不需要任何定时任务**
+
+   展示口径：
+      今日访问 = d-<今天> 的值
+      历史访问 = 6069 + total - 1
+                 ↑ 减 1 的原因：/hit 返回的是「含本次」的值，而 6069 这个基线是作者给的
+                   「截至今天」的累计数，已经包含"上线那一刻"这次访问了。
+                   所以第一个访客看到的正好是 6069，第二个是 6070，符合直觉。
+
+   去重：sessionStorage 记一次，**同一标签页刷新不重复计数**（关掉标签页 = 新会话，会再计一次）。
+   时区：日期一律按 **UTC+8** 算，保证全国访客看到同一个"今天"，不会因为谁的电脑时区不对就错位。
+   兜底：每次成功都把数字缓存进 localStorage，请求失败就显示上次的缓存并标注「·离线」，
+        连缓存都没有就显示「统计暂不可用」——统计挂了绝不影响游戏本身。
+   隐私：计数请求是浏览器**直接**打给 abacus 的（不经过 GitHub，也不占 GitHub Pages 的流量），
+        对方会看到访客 IP；只发两个自增请求，不带任何游戏内数据。
+   ========================================================================= */
+;(function () {
+  'use strict';
+
+  var WIN = window, D = document;
+
+  var API = 'https://abacus.jasoncameron.dev';   /* 计数服务（可被 window.__dzPVBase 覆盖，便于自检） */
+  var NS = 'dzx-escape-9f3c1d';                  /* namespace：上线即固定，换名字 = 从 0 重新数
+                                                     ⚠ 这个 total 是**预建**的（POST /create?value=0），
+                                                       所以线上计数从 0 起，第一个真访客正好看到基线 6069。
+                                                       自检一律用别的 namespace（window.__dzPVNs），别打这个。 */
+  var SEED = 6069;                               /* 作者给的基线 */
+  var SEED_DAY = '2026-10-04';                   /* 基线日期（仅用于展示） */
+  var CHIP = 'dzPvChip';
+  var KC = 'dz_pv_cache_v1';                     /* 数字缓存（离线也能显示上次的） */
+  var KS = 'dz_pv_sess_v1';                      /* 本会话是否已计数 */
+
+  function $(id) { try { return D.getElementById(id); } catch (e) { return null; } }
+  function log() { try { console.log.apply(console, ['[DZ-PV]'].concat([].slice.call(arguments))); } catch (e) {} }
+  function beepOk() { try { if (typeof beep === 'function') beep(880, .06, 'sine', .04); } catch (e) {} }
+  function apiBase() { try { return WIN.__dzPVBase || API; } catch (e) { return API; } }
+  function nsName() { try { return WIN.__dzPVNs || NS; } catch (e) { return NS; } }   /* 自检可换 namespace */
+
+  /* ---------- 日期（固定 UTC+8，全国访客口径一致） ---------- */
+  function bjDay() {
+    var d = new Date(Date.now() + 8 * 3600 * 1000);
+    var m = d.getUTCMonth() + 1, dd = d.getUTCDate();
+    return d.getUTCFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (dd < 10 ? '0' : '') + dd;
+  }
+
+  /* ---------- XHR（不用 fetch：老 WebView / file:// 下更稳，超时可控） ---------- */
+  function req(url, cb) {
+    var x;
+    try { x = new XMLHttpRequest(); } catch (e) { cb(null, 'no-xhr'); return; }
+    try {
+      x.open('GET', url, true);
+      x.timeout = 8000;
+      x.onreadystatechange = function () {
+        if (x.readyState !== 4) return;
+        if (x.status === 200) {
+          var v = null;
+          try { v = JSON.parse(x.responseText); } catch (e) {}
+          if (v && typeof v.value === 'number') cb(v.value, null);
+          else cb(null, 'bad-json');
+        } else if (x.status === 404) {
+          cb(null, 'not-found');       /* key 还没被创建 —— 当 0 处理，不是错误 */
+        } else {
+          cb(null, 'http-' + x.status);
+        }
+      };
+      x.onerror = function () { cb(null, 'net'); };
+      x.ontimeout = function () { cb(null, 'timeout'); };
+      x.send();
+    } catch (e) { cb(null, 'throw'); }
+  }
+  function hit(key, cb) { req(apiBase() + '/hit/' + nsName() + '/' + key, cb); }
+  function get(key, cb) { req(apiBase() + '/get/' + nsName() + '/' + key, cb); }
+
+  /* ---------- 缓存 ---------- */
+  function cacheRead() { try { return JSON.parse(localStorage.getItem(KC) || 'null'); } catch (e) { return null; } }
+  function cacheWrite(o) { try { localStorage.setItem(KC, JSON.stringify(o)); } catch (e) {} }
+  function sessGet(k) { try { return sessionStorage.getItem(KS + '_' + k); } catch (e) { return null; } }
+  function sessSet(k, v) { try { sessionStorage.setItem(KS + '_' + k, v); } catch (e) {} }
+
+  /* ---------- 状态 ---------- */
+  var day = bjDay();
+  var S = {
+    total: null,       /* total 计数器的原始值 */
+    today: null,       /* 今日原始值 */
+    cachedDay: null,   /* 缓存里的日期（判断"今日"这条还能不能用） */
+    offline: false,    /* 走的缓存 */
+    dead: false,       /* 连缓存都没有 */
+    counted: false     /* 本次是否真的自增了 */
+  };
+
+  function hist() { return (S.total && S.total > 0) ? (SEED + S.total - 1) : SEED; }
+
+  /* =====================================================================
+     一、主界面右上角……不，**左上角**的小条（BGM 那条在右上角，别撞）
+     ===================================================================== */
+  function menuUp() {
+    var ids = ['lyMenu', 'dzLaunch'], i;
+    for (i = 0; i < ids.length; i++) {
+      var l = $(ids[i]);
+      if (l && !l.classList.contains('hidden') && !l.classList.contains('dzHidden') && l.style.display !== 'none') return true;
+    }
+    return false;
+  }
+
+  function injectCss() {
+    if ($('dzPvCss')) return;
+    var st = D.createElement('style');
+    st.id = 'dzPvCss';
+    st.textContent = [
+      '#' + CHIP + '{position:absolute;left:2.4%;top:21%;z-index:8;cursor:pointer;',
+        'display:flex;align-items:center;max-width:46%;padding:6px 10px;border-radius:999px;',
+        'border:1.5px solid rgba(120,160,255,.4);background:linear-gradient(180deg,rgba(10,22,44,.92),rgba(6,12,26,.92));',
+        'color:#cfe0ff;font:800 10.5px/1.3 inherit;box-shadow:0 6px 20px rgba(0,0,0,.5);}',
+      '#' + CHIP + ' .pvIco{color:#8ff0ff;margin-right:5px;}',
+      '#' + CHIP + ' b{color:#ffe9b8;font-weight:900;margin:0 1px;}',
+      '#' + CHIP + ' .pvSep{color:#7d9dc6;margin:0 4px;}',
+      '#' + CHIP + ' .pvOut{color:#ffb4b4;margin-left:5px;font-weight:700;}'
+    ].join('\n');
+    try { D.head.appendChild(st); } catch (e) {}
+  }
+
+  var lastHtml = '';
+  function render() {
+    try {
+      injectCss();
+      var c = $(CHIP);
+      if (!c) {
+        c = D.createElement('div');
+        c.id = CHIP;
+        c.addEventListener('click', function (e) {
+          try { e.stopPropagation(); } catch (x) {}
+          beepOk();
+          S.offline = false; S.dead = false;
+          refetch();
+        });
+        (($('stage')) || D.body).appendChild(c);
+      }
+      c.style.display = menuUp() ? '' : 'none';
+
+      var todayTxt = (typeof S.today === 'number') ? String(S.today) : '—';
+      var histTxt = String(hist());
+      var html = '<span class="pvIco">👀</span>今日 <b>' + todayTxt + '</b>' +
+        '<span class="pvSep">·</span>历史 <b>' + histTxt + '</b>' +
+        (S.dead ? '<span class="pvOut">·暂不可用</span>' : (S.offline ? '<span class="pvOut">·离线</span>' : ''));
+      if (html !== lastHtml) { c.innerHTML = html; lastHtml = html; }
+      c.title = '今日来访 ' + todayTxt + ' · 历史访问 ' + histTxt +
+        '\n基线 ' + SEED + '（截至 ' + SEED_DAY + '）· 日期按 UTC+8 · 点一下重新统计';
+    } catch (e) {}
+  }
+
+  /* =====================================================================
+     二、取数：本次会话没计过 → 自增；计过 → 只读
+     ===================================================================== */
+  function apply(total, today, counted) {
+    if (typeof total === 'number') S.total = total;
+    if (typeof today === 'number') S.today = today;
+    else if (today === 0 || today == null) { if (S.today == null) S.today = 0; }
+    S.offline = false; S.dead = false; S.counted = counted;
+    S.cachedDay = day;
+    cacheWrite({ t: S.total, d: S.today, day: day, at: Date.now() });
+    render();
+    log('今日 ' + S.today + ' / 历史 ' + hist() + '（total=' + S.total + (counted ? ' 本次已计数' : ' 本会话已计过') + '）');
+  }
+
+  function fail(why) {
+    S.offline = true;
+    /* 连缓存都没有（第一次来就赶上统计挂了）→ 标「暂不可用」，只显示基线 */
+    S.dead = (S.total == null && S.today == null);
+    log('取数失败：' + why + ' → ' + (S.dead ? '连缓存都没有，只显示基线' : '用缓存兜底'));
+    render();
+  }
+
+  function refetch() {
+    var counted = sessGet('done') === day;
+    if (!counted) {
+      /* 先自增 total，再自增当天；两次都是 /hit */
+      hit('total', function (tv, e1) {
+        if (tv == null && e1 && e1 !== 'not-found') { fail('total ' + e1); return; }
+        var t = (tv == null) ? 0 : tv;
+        hit('d-' + day, function (dv, e2) {
+          if (dv == null && e2 && e2 !== 'not-found') { S.total = t; fail('day ' + e2); return; }
+          sessSet('done', day);
+          apply(t, (dv == null ? 0 : dv), true);
+        });
+      });
+    } else {
+      get('total', function (tv, e1) {
+        if (tv == null && e1 && e1 !== 'not-found') { fail('total ' + e1); return; }
+        get('d-' + day, function (dv, e2) {
+          if (dv == null && e2 && e2 !== 'not-found') { S.total = (tv == null ? S.total : tv); fail('day ' + e2); return; }
+          apply((tv == null ? 0 : tv), (dv == null ? 0 : dv), false);
+        });
+      });
+    }
+  }
+
+  function boot() {
+    /* 先用缓存把数字亮出来（有的话），别让条上先空一下 */
+    var c = cacheRead();
+    if (c) {
+      S.total = (typeof c.t === 'number') ? c.t : null;
+      S.cachedDay = c.day || null;
+      S.today = (c.day === day && typeof c.d === 'number') ? c.d : null;
+      render();
+    }
+    refetch();
+  }
+
+  /* =====================================================================
+     三、挂上：主界面小条要跟着菜单显示/隐藏，所以轮询维持（同 BGM 那条的做法）
+     ===================================================================== */
+  var n = 0;
+  var t = setInterval(function () {
+    n++;
+    try { render(); } catch (e) {}
+    if (n > 900) clearInterval(t);   /* 15 分钟后停：进游戏了就不需要它了 */
+  }, 1000);
+
+  try {
+    if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  } catch (e) { boot(); }
+
+  try {
+    WIN.__dzPV = {
+      seed: SEED, seedDay: SEED_DAY, ns: NS, api: API,
+      day: function () { return day; },
+      hist: hist,
+      refetch: refetch,
+      reset: function () { try { sessionStorage.removeItem(KS + '_done'); } catch (e) {} },
+      diag: function () {
+        return {
+          ns: nsName(), seed: SEED, today: S.today, total: S.total,
+          hist: hist(), day: day, cachedDay: S.cachedDay,
+          offline: S.offline, dead: S.dead, counted: S.counted,
+          chip: !!$(CHIP),
+          chipText: (function () { var e = $(CHIP); return e ? (e.textContent || '').replace(/\s+/g, ' ').trim() : null; })(),
+          chipVisible: (function () { var e = $(CHIP); return e ? e.style.display !== 'none' : null; })(),
+          cached: cacheRead()
+        };
+      }
+    };
+  } catch (e) {}
+
+  log('访问量统计就绪：基线 ' + SEED + '（截至 ' + SEED_DAY + '）· namespace ' + NS);
+})();
+
 /* ==================== DZ 本体升级 v2.0.5 END ==================== */
 })();
 </script>
