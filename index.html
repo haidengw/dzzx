@@ -36,7 +36,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>河北定州中学大逃亡 · 假期歼灭战 · v2.0.5 网页版</title>
+<title>河北定州中学大逃亡 · 假期歼灭战 · v2.1 网页版</title>
 <style>
 *{box-sizing:border-box;}
 html,body{margin:0;height:100%;overflow:hidden;background:#060912;display:flex;align-items:center;justify-content:center;font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
@@ -1163,10 +1163,10 @@ function updateSmoke(dt){
   }
 }
 function obstacleHitPlayer(o){
-  if(o.kind==='ball'){const dx=player.x-o.x,dy=player.y-o.y;const r2=player.r*0.8+o.r*0.85;return dx*dx+dy*dy<r2*r2;}
-  if(o.kind==='hoop'){if(!circleRectHit(player.x,player.y,player.r*0.8,o))return false;return Math.abs(player.x-o.holeX)>o.holeW/2-5;}
-  if(o.kind==='noodle'){if(o.state!=='fall')return false;return circleRectHit(player.x,player.y,player.r*0.8,o);}
-  return circleRectHit(player.x,player.y,player.r*0.8,o);
+  if(o.kind==='ball'){const dx=player.x-o.x,dy=player.y-o.y;const r2=player.r*0.64+o.r*0.85;return dx*dx+dy*dy<r2*r2;}
+  if(o.kind==='hoop'){if(!circleRectHit(player.x,player.y,player.r*0.64,o))return false;return Math.abs(player.x-o.holeX)>o.holeW/2-5;}
+  if(o.kind==='noodle'){if(o.state!=='fall')return false;return circleRectHit(player.x,player.y,player.r*0.64,o);}
+  return circleRectHit(player.x,player.y,player.r*0.64,o);
 }
 function updateObstacles(dt){
   for(let i=obstacles.length-1;i>=0;i--){
@@ -1419,7 +1419,7 @@ function updateBossBullets(dt){
 }
     b.x+=b.vx*dt;b.y+=b.vy*dt;b.rot+=dt*2.5;
     if(b.y>H+50||b.x<-50||b.x>W+50){bossBullets.splice(i,1);continue;}
-    const dx=player.x-b.x,dy=player.y-b.y;const rad=player.r+b.r*0.75;
+    const dx=player.x-b.x,dy=player.y-b.y;const rad=player.r*0.8+b.r*0.75;
     if(dx*dx+dy*dy<rad*rad){
       bossBullets.splice(i,1);
       if(buffInvincible>0||invuln>0)spawnBurst(b.x,b.y,'#ffd166',6);
@@ -1443,7 +1443,7 @@ function updateBoss(dt){
     }
     beep(260,.07,'square',.035);b.fireTimer=rand(1.0,1.8);
   }
-  if(b.y+b.h>player.y-player.r*0.6)killBoss(true);
+  if(b.y+b.h>player.y-player.r*0.48)killBoss(true);
 }
 function updateIdeaBox(dt){
   const b=boss;if(!b)return;
@@ -1500,7 +1500,7 @@ function killBoss(silent){
 }
 function updateSportBoss(dt){
   const b=sportBoss;b.phase+=dt;if(b.flash>0)b.flash-=dt;b.y+=b.vy*dt;
-  if(b.y+b.h>player.y-player.r*0.6){
+  if(b.y+b.h>player.y-player.r*0.48){
     addFloater(W/2,H*0.5,'体育课压顶！','#ff922b');
     spawnBurst(W/2,player.y-40,'#ff922b',20);shake=24;
     sportBoss=null;T.sportBoss=rand(22,32);damagePlayer('体育课！');return;
@@ -2228,7 +2228,7 @@ function loop(ts){
 }
 loadProfile();
 /* ==================== DZ PATCH v1.3 START ==================== */
-/* 定州中学 · v2.0.5 · 秘境 v1.3 已接入 / 剧情 / 管道世界 / 全部既有功能 */
+/* 定州中学 · v2.1 · 秘境 v1.3 已接入 / 剧情 / 管道世界 / 全部既有功能 */
 ;(function(){
   'use strict';
 
@@ -9100,36 +9100,18 @@ requestAnimationFrame(loop);
 /* ==================== DZ LAN PATCH (v0.97) END ==================== */
 
 
-/* ==================== DZ 本体升级 v2.0.5 START ==================== */
+/* ==================== DZ 本体升级 v2.1 START ==================== */
 
 /* ---------- src-parent/upgrade.js ---------- */
-/* =========================================================================
-   定中project · 本体升级 v1.7.12
-   -------------------------------------------------------------------------
-   ⚠ 本文件必须注入到主 IIFE 内部（主脚本是 (()=>{ ... })() 包起来的，
-     从外面够不着 W / profile / dmgMul / updateSmoke 这些东西）。
-     注入点见 upgrade-parent.mjs。
-
-   本版四件事：
-     ① 抽烟 / 尖叫 高等级大幅调强
-     ② 通灵特质：秘境罕见解锁 → 本体遇见特殊内容（双向）
-     ③ 教师办公室：双向 + 数值为主
-     ④ 作弊模式扩展
-   （试卷连题 / 护盾单层 / 紧凑战绩码 三项沿用 v1.8 的实现）
-   ========================================================================= */
+/* 定中project · 本体升级 v1.7.12 */
 ;(function () {
   'use strict';
   var DZ = (window.DZ = window.DZ || {});
-  DZ.version = '2.0.5';
+  DZ.version = '2.1';
 
   function lv() { try { return getCharData(profile.selectedChar).level || 1; } catch (e) { return 1; } }
 
-  /* =======================================================================
-     ① 抽烟 / 尖叫 高等级调强
-     -----------------------------------------------------------------------
-     现状：两个技能 DPS 都只有 1.2，是全场最低（作业本 9.1）。
-     思路：不动低级手感，把质变放在 Lv5 / Lv8 / Lv10 —— 练这两个角色有回报。
-     ======================================================================= */
+  /* ① 抽烟 / 尖叫 高等级调强 */
 
   /* ---- 抽烟：烟柱 ---- */
   var _updateSmoke = updateSmoke;
@@ -9217,12 +9199,7 @@ requestAnimationFrame(loop);
              radius: (L >= 8 ? '×1.30' : '×1'), bossMul: L >= 8 ? 0.85 : 0.6, double: L >= 10 };
   };
 
-  /* =======================================================================
-     ② 通灵特质（秘境 → 本体）
-     -----------------------------------------------------------------------
-     秘境里打"灵异系"怪物（校服幽灵 / 水鬼 / 值夜人）有极小概率解锁「通灵」，
-     解锁后本体里出现特殊内容：夜铃事件 + 只有通灵才能拿到的第 11 件收藏品。
-     ======================================================================= */
+  /* ② 通灵特质（秘境 → 本体） */
   var NIGHTBELL_ID = 'nightbell';
   DZ.hasMedium = function () { return !!(profile.traits && profile.traits.medium); };
   DZ.setMedium = function (on) {
@@ -9269,26 +9246,14 @@ requestAnimationFrame(loop);
     return _renderForBell();
   };
 
-  /* =======================================================================
-     ③a 秘境全屏覆盖时，母项目这一层**完全看不见** —— 但主循环 loop() 每帧
-         照样调用 render()，等于每帧白画一整套赛博夜景 + 实体 + 粒子。
-         手机上这就是「秘境奇卡无比」的主因（两份全屏 canvas 同时在画）。
-         __DZ_IN_MIJING__ 由秘境嵌入胶水（95_embed.js）在 enter/exit 里维护，
-         读一个布尔量即可，零 DOM 开销。
-         ⚠ 只跳过 render：update / 计时 / 暂停逻辑一律照旧，退出后画面立即恢复。
-     ======================================================================= */
+  /* ③a 秘境全屏覆盖时，母项目这一层**完全看不见** —— 但主循环 loop() 每帧 */
   var _renderSkipMijing = render;
   render = function () {
     try { if (window.__DZ_IN_MIJING__ === true) return; } catch (e) {}
     return _renderSkipMijing.apply(this, arguments);
   };
 
-  /* =======================================================================
-     ③ 教师办公室（双向 · 数值为主）
-     -----------------------------------------------------------------------
-     存档挂在 profile.base 上（和秘境同一套结构），秘境进出会自动同步。
-     设施全部给本体的数值加成，加成通过包装 dmgMul / cdMul / maxLivesFor 生效。
-     ======================================================================= */
+  /* ③ 教师办公室（双向 · 数值为主） */
   var FACS = {
     workbench: { name: '备课桌', cls: 'unlock', cost: {}, desc: '解锁配件合成' },
     furnace:   { name: '文印室', cls: 'unlock', cost: {}, desc: '试卷伤害 +6%（每局生效）' },
@@ -9721,12 +9686,7 @@ requestAnimationFrame(loop);
   }
   setTimeout(watchCheatPanel, 800);
 
-  /* =======================================================================
-     宿主桥：秘境（子项目）退出来的时候要能把东西写回本体
-     -----------------------------------------------------------------------
-     ⚠ 本体主脚本在 IIFE 里，外面（比如秘境的嵌入胶水）够不着 profile。
-       所以这里主动把几个同步入口挂到 window 上给外面用。
-     ======================================================================= */
+  /* 宿主桥：秘境（子项目）退出来的时候要能把东西写回本体 */
   DZ.syncTraits = function (tr) {
     if (!tr) return false;
     var changed = false;
@@ -9757,16 +9717,7 @@ requestAnimationFrame(loop);
   /* 起搏 BGM（等 SYNTH 就绪） */
   setTimeout(bgmTick, 1500);
 
-  /* =======================================================================
-     ⑤ BGM：跟着阶段走 + 进秘境换曲
-     -----------------------------------------------------------------------
-     母项目本来就有 6 首合成 BGM（教室/食堂/操场/实验室/会议室/假期），
-     但只能手动切（normalIdx 靠按钮），所以听来听去都是一首。
-     这里做两件事：
-       1. 往 SYNTH.tracks 里补「秘境」「宿舍」两首
-          （tracks 返回的是原数组引用，可以直接 push）
-       2. 每 600ms 检查一次当前阶段，自动切到对应的曲子
-     ======================================================================= */
+  /* ⑤ BGM：跟着阶段走 + 进秘境换曲 */
   var DZ_TRACKS = [
     { id: 'mijing', name: '通风橱之下', bpm: 68, wave: 'sine', vol: 0.30, pattern: 'alberti', stepsPerChord: 8,
       chords: [[45, 52, 57, 60], [43, 50, 55, 58], [41, 48, 53, 57], [43, 50, 57, 60]],
@@ -9843,11 +9794,7 @@ requestAnimationFrame(loop);
     try {
       var B = window.__dzSynthBgm;
       if (!B) return false;
-      /* ⚠ v1.8.3c 关键修复：音源是**内置音频**（默认）时，绝不能重新打开合成 BGM。
-         否则每次"恢复 BGM"（进秘境回来 / 首次手势 / 状态切换）都会把合成器又点亮，
-         结果是 MP3 + 合成两条 BGM 同时响 —— 用户听到的"奇怪的打点声（频率随时间变）"就是它，
-         而且把音乐音量拉到 0 也拦不住（合成器调度层不看那个音量）。
-         实测音频探针：syn:true 且 real:true、bgmT 一直在走。 */
+      /* 否则每次"恢复 BGM"（进秘境回来 / 首次手势 / 状态切换）都会把合成器又点亮， */
       var src = null;
       try { src = (window.__dzBgmAudio && window.__dzBgmAudio.getSource) ? window.__dzBgmAudio.getSource() : null; } catch (e0) {}
       if (src === 'audio') {
@@ -10028,20 +9975,7 @@ requestAnimationFrame(loop);
     forceCheatExt: function () { buildCheatExt(); return !!document.getElementById('czExt'); }
   };
 
-  /* =======================================================================
-     v2.0 · 战绩码互传加固
-     -----------------------------------------------------------------------
-     作者报「战绩码同版本互传失效」。把能想到的输入形态全测了一遍
-     （紧凑码 / 明文 base64 / 码里插换行或空格 / 首尾带全角空格与引号 / 直接贴 JSON 原文），
-     结论：紧凑格式本身是好的（`DZ.unpack(DZ.pack(x))` 完全对称），
-     但**解码只认两种形态**，任何别的粘贴方式都只会得到一句含糊的"无效"。
-     这里做四件事：
-       ① 解码分层容错：紧凑包 → JSON 原文 → 明文 base64 → base64url 归一化，
-          并且先把空白（含全角空格/不换行空格）和首尾引号统统清掉；
-       ② 失败时抛出**具体原因**（配合 upgrade-parent.mjs 的 ⑧ 一起显示出来）；
-       ③ 面板加「📋 复制」按钮 —— 手机上长按选中很容易漏字符，这是互传失败最常见的原因；
-       ④ 导入成功后弹一条确认，明确告诉玩家到底导进来了什么。
-     ======================================================================= */
+  /* v2.0 · 战绩码互传加固 */
   (function () {
     var _decPrev = b64dec;                       /* 上一层：紧凑包 + 明文 base64 */
     /* 解码成功后记一份，供下面的"导入确认"用。
@@ -10422,26 +10356,7 @@ requestAnimationFrame(loop);
 
 
 /* ---------- src-parent/ui_skin.js ---------- */
-/* =========================================================================
-   src-parent/ui_skin.js  ·  v1.8 美术 / UI 升级（A 流）
-   -------------------------------------------------------------------------
-   本文件被 upgrade-parent.mjs 拼接进母项目主 IIFE 内部，因此可以直接使用：
-     W  H  GROUND_Y  TAU  ctx  profile  state  currentZone  drawBG  beep  $
-     saveProfile  loadProfile  PROFILE_KEY  requestAnimationFrame  t  FONT
-   目录：
-     ① 赛博校园夜景主菜单背景（纯程序化 = 0 图片字节，静态层全部离屏缓存）
-     ② 校门三个门洞 = 主菜单三个主入口（真实 DOM <button>，键盘 / AT 可达）
-     ③ body.dz-skin-v2 作用域的赛博换皮 CSS（旧版 UI 完全不受影响）
-     ④ 「返回旧版 UI」开关，写进 profile.uiSkinV2 并 saveProfile()
-     ⑤ 资源包整合（方案 A）：程序化校门永远在最上层；menuPortrait/Landscape 照片
-        降饱和+压暗+模糊后退成最底层氛围；保留 menuGate / menuSkyline 槽位供可选替换
-     ⑥ 启动器态 body.dz-launch-mode：启动器可见时收起整套主菜单注入物（防重合）
-     ⑦ 唯一的皮肤切换按钮 #dzSkinBtnMain，在四个容器之间「搬家」（不新建副本）
-    错误处理：本模块**不静默吞错** —— 所有失败路径都过 guard(tag, fn)，
-      首次失败 console.warn('[dz-ui-skin] <tag> 失败（已回退）：', e)，
-      并记进 window.__dzSkinErrs（window.__dzSkinCheck().skinErrs 也能读到）。
-      整个模块另包在 try/catch 内：任何异常都不会白屏，最多退回旧版背景。
-   ========================================================================= */
+/* src-parent/ui_skin.js  ·  v1.8 美术 / UI 升级（A 流） */
 (function () {
   'use strict';
   try {
@@ -10457,11 +10372,7 @@ requestAnimationFrame(loop);
     var hasCtx = (typeof ctx !== 'undefined' && ctx && typeof ctx.drawImage === 'function');
     var hasDoc = !!(DOC && DOC.body && DOC.head);
 
-    /* ---------------------------------------------------------------------
-       统一守卫：失败**不静默**。记录 + console.warn（同一个 tag 只喊一次，
-       免得 6Hz 探测把控制台刷爆）。错误列表暴露成 window.__dzSkinErrs，
-       window.__dzSkinCheck() 也会带上，方便无头探针断言。
-       --------------------------------------------------------------------- */
+    /* 统一守卫：失败**不静默**。记录 + console.warn（同一个 tag 只喊一次， */
     var SKIN_ERRS = [], SKIN_WARNED = {};
     /* 皮肤开关被"人"点过几次 —— 用来区分「代码误写 false」和「存档里本来就是 false」 */
     var SKIN_TOGGLE_N = 0;
@@ -10481,16 +10392,7 @@ requestAnimationFrame(loop);
     }
     try { WIN.__dzSkinErrs = SKIN_ERRS; } catch (e) {}
 
-    /* =====================================================================
-       0b. 性能档 + 菜单排版比例（v1.8.3）
-       ---------------------------------------------------------------------
-       · PERF.low：触屏 + 小屏/高 DPR → 夜景降粒子、去 shadowBlur、背景 30fps。
-         手机 GPU 上 shadowBlur 26~30px 的大面积模糊是最大单项开销，
-         粒子（雪/浮尘/星）每颗一次 arc+fill 也很贵。
-       · 菜单比例 --ms：新版菜单的排版全是固定 px，而舞台是 480x720 的等比盒子——
-         手机上舞台只有 ~0.86×，44px 的按钮就吃掉 7% 的高度，必然挤成一团。
-         把字号/内距统一乘 --ms，任何屏宽都保持同一套比例。
-       ===================================================================== */
+    /* 0b. 性能档 + 菜单排版比例（v1.8.3） */
     var PERF = (function () {
       var coarse = false;
       try { coarse = !!(WIN.matchMedia && WIN.matchMedia('(pointer: coarse)').matches); } catch (e) { coarse = false; }
@@ -10509,14 +10411,7 @@ requestAnimationFrame(loop);
     var SKIN_STATE = { showMenuWrapped: false };
     try { WIN.__dzSkinState2 = SKIN_STATE; } catch (e) {}
 
-    /* ---------------------------------------------------------------------
-       v1.8.3 修：启动器的「单机」卡片只调 `showMenu()`，**不会结束正在跑的那一局**。
-       于是「游戏在菜单后面继续跑」：玩家看到菜单、点门洞进不去，看起来就是卡死。
-       实测调用栈（手机端抓的）：
-         MENU-UNHIDE ← DOMTokenList.remove ← showMenu(game.html:2280) ← [data-act=solo] click(2641)
-       给 `window.__v13.showMenu` 包一层：处于 playing/dorm/paused/over 时先走正规的
-       `returnToMenu(false)`（它自己会把菜单显示出来），不再让原 showMenu 重复执行。
-       --------------------------------------------------------------------- */
+    /* v1.8.3 修：启动器的「单机」卡片只调 `showMenu()`，**不会结束正在跑的那一局**。 */
     function wrapShowMenu() {
       var v13 = WIN.__v13;
       if (!v13 || typeof v13.showMenu !== 'function' || v13.__dzShowMenuWrapped) return;
@@ -10539,13 +10434,7 @@ requestAnimationFrame(loop);
       SKIN_STATE.showMenuWrapped = true;
     }
 
-    /* ---------------------------------------------------------------------
-       inset 兜底（v1.8.3）：Android 10 自带 WebView 是 Chromium 83，
-       `inset: 0` 要 Chrome 87+ —— 不支持时所有 `.overlay` 弹窗会退化成普通流，
-       整块排到画布下面、跑出屏幕（实测：选阶面板 658..1120 / 视口 775）。
-       CSS 里已经改成四边显式定位；这里再对**已知面板**写内联偏移兜底，
-       免得将来哪条规则又被 inseter 掉。命令式、幂等、只在老浏览器上跑。
-       --------------------------------------------------------------------- */
+    /* inset 兜底（v1.8.3）：Android 10 自带 WebView 是 Chromium 83， */
     var MENU_S = 0, NARROW = null;
     var INSET_OK = null;
     var PANEL_IDS = ['dzTutorial', 'dzGradePanel', 'dzUnivPanel', 'dzNotice', 'dzStageSelect', 'dzInvestigatePanel', 'dzStoryOverlay',
@@ -10597,15 +10486,7 @@ requestAnimationFrame(loop);
       }
     }
 
-    /* ---------------------------------------------------------------------
-       v1.8.3 修（第二个坑）：**启动器/菜单和正在跑的一局会同时存在**。
-       实测：手机上一进游戏，过一会儿菜单又被放回最上层（调用栈见上），玩家看到的是
-       「菜单 + 后面还在跑的一局（分数/心数/下落的假期全在动）」，点门洞自然进不去。
-       更早的版本在 showMenu() 里也不清场，于是菜单背景上还挂着上一局的实体和 HUD。
-       这里做两件幂等的事（跑在 6Hz 的可见性探测里，开销只有几个 length 读取）：
-         ① 在跑局 + 菜单露着 → 走正规的 returnToMenu(false)，把这一局收掉
-         ② 菜单态还挂着上一局的实体 → reset() 清场（老代码漏了）
-       --------------------------------------------------------------------- */
+    /* v1.8.3 修（第二个坑）：**启动器/菜单和正在跑的一局会同时存在**。 */
     /* v1.9 修竞态：面板"打开"要按 **class/display** 判定，不能看 opacity ——
        `.overlay` 有 0.25s 淡入过渡，头十几毫秒 opacity≈0，用可见性判定会把它当成"没显示"，
        于是空画面兜底抢先触发，把刚打开的页面弹回主菜单（表现就是"按钮时好时坏"）。 */
@@ -10683,16 +10564,7 @@ requestAnimationFrame(loop);
     var SKY_H   = HORIZON;        /* 天空层高度 */
     var MARGIN  = 44;             /* 视差左右余量 */
 
-    /* ---------------------------------------------------------------------
-       赛博校门几何 —— 结构照真实「河北定州中学」正门，全部由 canvas 代码绘制
-       （零图片字节：不使用、不内嵌任何实拍素材）
-         · 浅灰石砌平顶门楼（无飞檐翘角），石块横竖勾缝
-         · 两根粗方石柱墩 + 两根内侧细柱 → 中央超宽门洞 + 左右窄门洞
-         · 门楣横向石带 + 阶梯状女儿墙 + 金色校名「河北定州中学」
-         · 门楣下沿一条横贯全门的 LED 电子横幅 + 4~6 个红灯笼
-         · 两侧各一根金色多球簇灯柱
-       三个门洞同时是 DOM 按钮热点，必须 1:1 对齐。
-       --------------------------------------------------------------------- */
+    /* 赛博校门几何 —— 结构照真实「河北定州中学」正门，全部由 canvas 代码绘制 */
     var GEO = (function () {
       var L = 48, R = 432;                 /* 门楼外沿（占画面宽 80%） */
       var PL = 48, PR = 432, PIL = 56;     /* 外侧粗柱墩：48..104 / 376..432 */
@@ -11844,11 +11716,7 @@ requestAnimationFrame(loop);
     /* =====================================================================
        4. 主菜单背景（画布）—— 进 drawBG 的包装
        ===================================================================== */
-    /* ---------------------------------------------------------------------
-       资源包照片 → 「最底层氛围背景」
-       方案 A：程序化赛博大门永远画在最上面；包里的菜单照片降饱和 / 压暗 / 轻微模糊，
-       退成远景氛围层。这样「资源包能换氛围」和「大门永远是程序化重绘」同时成立。
-       --------------------------------------------------------------------- */
+    /* 资源包照片 → 「最底层氛围背景」 */
     function pickMenuPhoto() {
       var landscape = (WIN.innerWidth > WIN.innerHeight);
       var a = packArr(landscape ? 'menuLandscape' : 'menuPortrait');
@@ -11885,11 +11753,7 @@ requestAnimationFrame(loop);
       return cv;
     }
 
-    /* ---------------------------------------------------------------------
-       夜景绘制目标：手机档先画进缓存画布，再整幅贴到主画布。
-       缓存分辨率与母项目主画布 1:1（ss = dpr≤2），所以画面完全一致，
-       省下的是「重绘频率」：60Hz → 30Hz，实测手机 GPU 上一半的夜景开销。
-       --------------------------------------------------------------------- */
+    /* 夜景绘制目标：手机档先画进缓存画布，再整幅贴到主画布。 */
     var FXF = { cv: null, ctx: null, ss: 0, last: 0, owner: null };
     /* 诊断：贴图 / 重绘次数（window.__dzSkinStats 可读，用来断言手机档真的降频） */
     var STATS = { calls: 0, scenes: 0, ms: 0, low: PERF.low };
@@ -12205,24 +12069,14 @@ requestAnimationFrame(loop);
     /* =====================================================================
        5. drawBG 包装（资源包 hook 之后包，所以照片包依旧优先）
        ===================================================================== */
-    /* =====================================================================
-       v1.9：**取消双 UI**。老菜单/老皮肤整条下线，新版是唯一界面。
-       原因：两套 UI 并存时，老 UI 的分支在老 WebView（Chromium 83）上会出现
-       "菜单被按成透明 → 只剩背景"的诡异空画面（`inset` 兼容、hidden 归属、
-       启动器态判定三者互相打架，修一处冒一处）。作者要求一劳永逸 → 直接删掉老路。
-       下面 skinOn 恒为 true，并且每 4 秒再断言一次（任何补丁/脚本都夺不走）。
-       ===================================================================== */
+    /* v1.9：**取消双 UI**。老菜单/老皮肤整条下线，新版是唯一界面。 */
     var skinOn = true;
 
     var _origDrawBG = (typeof drawBG === 'function') ? drawBG : null;
     if (hasCtx && _origDrawBG) {
       drawBG = function () {
         if (skinOn && typeof state !== 'undefined' && state === 'menu' && !cacheBroken) {
-          /* 新版界面：主菜单永远是「程序化赛博校门」，永远画在最上层。
-             资源包的菜单照片不会盖掉它 —— 只会作为最底层的氛围背景
-             （降饱和 / 压暗 / 轻微模糊，见 buildPhotoBack）。
-             资源包要换门楼/远景本身，用新槽位 menuGate / menuSkyline。
-             确实想整屏用照片：window.__dzSkinMenuPhoto = true（兼容开关） */
+          /* 资源包的菜单照片不会盖掉它 —— 只会作为最底层的氛围背景 */
           if (WIN.__dzSkinMenuPhoto === true && packHasMenuPhoto()) {
             /* 强制走资源包照片 */
           } else {
@@ -12260,17 +12114,7 @@ requestAnimationFrame(loop);
 
       /* ---------- 通用面板（暗玻璃 + 切角） ---------- */
       'body.dz-skin-v2 .overlay{background:linear-gradient(180deg,rgba(4,8,20,.94),rgba(3,6,14,.975)) !important;color:#dff2ff;}',
-      /* ---------- ★ v1.8.3 手机端致命修复：所有弹窗按**视口**铺满 + 居中 ----------
-         实测（vivo V2057A / Android 10 / **WebView = Chromium 83**）：
-         `.overlay{position:absolute;inset:0}` 里的 `inset` 是 **Chrome 87+** 才支持的简写，
-         83 上整条声明被丢弃 → 绝对定位元素四边都退回 `auto` → 元素按**普通流**排在画布
-         下面（正好从舞台底边 y=658 开始），于是：
-           · 教程卡片底部按钮在 y=972（视口只有 775）→ 点不到「下一步」
-           · 选阶面板盒子 658..1120 → 整块在屏幕外 → 点门洞后一片空、进不去游戏
-           · `#menu` 自己也在流里 → 子元素按「菜单自身内容高度」算百分比 → **底部一排按钮全丢**
-         修法：全部改成四边显式定位（老浏览器一样认），并且所有弹窗相对**视口**铺满。
-         ⚠ `#menu` 例外：它的子元素是按**舞台百分比**定位的，所以它必须留在舞台里
-         （absolute），其余弹窗用 fixed。 */
+      /* 实测（vivo V2057A / Android 10 / **WebView = Chromium 83**）： */
       'body.dz-skin-v2 .overlay{top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;',
         'width:auto !important;height:auto !important;max-width:none !important;max-height:none !important;',
         'box-sizing:border-box;overflow-y:auto !important;overflow-x:hidden !important;}',
@@ -12289,12 +12133,7 @@ requestAnimationFrame(loop);
       'body.dz-skin-v2 .sub b{color:#ffd166;}',
       'body.dz-skin-v2 .keys{color:#5d7ba6;}',
 
-      /* ---------- 教程弹窗（v1.8.3 修）----------
-         实测（手机 360×775 视口）：教程卡片被算到 y=656，卡片高 356 → 底部按钮在 y=972，
-         **整个按钮行都在视口之外**。而新版 UI 把「教程可见」当作阻挡 → 三个门洞不出现，
-         同时原版「开始上课」又被新版藏起来了 → 玩家一个入口都点不到，看起来就是卡死。
-         修法：让教程层直接相对**视口**定位（position:fixed），卡片再高也不超出屏幕，
-         并且卡片自己可滚动，任何屏幕尺寸下 × / 下一步 / 开始游戏 都在屏幕内。 */
+      /* 实测（手机 360×775 视口）：教程卡片被算到 y=656，卡片高 356 → 底部按钮在 y=972， */
       'body.dz-skin-v2 #dzTutorial{position:fixed !important;left:0;top:0;right:0;bottom:0;width:auto !important;height:auto !important;',
         'display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;',
         'padding:14px !important;box-sizing:border-box;z-index:220 !important;overflow:auto !important;}',
@@ -12341,12 +12180,7 @@ requestAnimationFrame(loop);
          v1.8.3：字号 / 内距 / 触控高度统一乘 --ms（舞台宽/480，JS 每帧写），
          这样手机小舞台和桌面大舞台上排版比例完全一致 —— 之前固定 px 在
          412px 宽的舞台上门洞按钮和底部三行会互相压。 ---------- */
-      /* ---------- ★★ 全局（不分新旧 UI）：Chromium 83 不认 `inset:0` 的兼容 ----------
-         老 WebView 上 `inset` 会被整条丢弃 → 绝对定位元素四边退回 auto → 面板按普通流
-         排到画布下面、跑出屏幕（"返回菜单一片空白"就是这么来的）。这条**必须全局**：
-         之前我把它限定在 body.dz-skin-v2 下，结果旧版 UI 完全没有这段修复，
-         旧启动器→单机→菜单直接 opacity 0。这里只补四边偏移与定位，不动 display/opacity，
-         所以新 UI 的既有规则与旧 UI 的原版样式都不受影响。 */
+      /* 老 WebView 上 `inset` 会被整条丢弃 → 绝对定位元素四边退回 auto → 面板按普通流 */
       'html body .overlay{top:0;left:0;right:0;bottom:0;}',
       'html body #menu.overlay{position:absolute;}',
       'html body .overlay:not(#menu){position:fixed;}',
@@ -12725,11 +12559,7 @@ requestAnimationFrame(loop);
                     'dzCheatPanel', 'dzQuiz', 'dzScriptSavePanel', 'dzPackPanel', 'dzCharPanel', 'dzTutorial',
                     'dzLanPanel', 'dzOfficePanel', 'gameover', 'pausePanel', 'collPanel', 'hwPanel',
                     'settingsPanel', 'ioPanel'];
-    /* 「可见」还不够 —— 还必须在**视口里真的有可见内容**。
-       实战踩坑（v1.8.3 手机端卡死）：教程层 class 上是显示状态，但卡片被算到 y=656、
-       按钮在 y=972，而视口只有 775 高 → 内容全在屏幕外，玩家点不到任何按钮；
-       而新版 UI 把「教程可见」当阻挡 → 三个门洞永远不出现（原版「开始上课」又被新版藏了），
-       结果一个入口都没有，看起来就是卡死。 */
+    /* 实战踩坑（v1.8.3 手机端卡死）：教程层 class 上是显示状态，但卡片被算到 y=656、 */
     function hasVisibleContent(el) {
       try {
         var r = el.getBoundingClientRect();
@@ -12986,7 +12816,7 @@ requestAnimationFrame(loop);
         f.id = 'dzMenuFoot';
         /* 英文副标 / 门洞提示都包在 span 里：手机（body.dz-narrow）上只留版本号，
            否则三条信息在一行里换行会把底部压成一团。 */
-        f.innerHTML = '<span class="dzVerChip">v2.0.5 · 赛博校园夜景' +
+        f.innerHTML = '<span class="dzVerChip">v2.1 · 赛博校园夜景' +
                         '<span class="dzFootEn"><br>CYBER CAMPUS / NIGHT</span></span>' +
                       '<span class="dzVerChip dzFootHint" style="border-color:rgba(255,98,176,.5);text-align:right">' +
                       '三个门洞 = 三个入口<br>点击门洞开始</span>';
@@ -13000,11 +12830,7 @@ requestAnimationFrame(loop);
       if (!DOC.getElementById('dzLaunchTop')) {
         var tp = DOC.createElement('div');
         tp.id = 'dzLaunchTop';
-        /* v2.0：顶部大标题也跟校名走（作者实测这里一直写死「定 州 中 学」）。
-           ⚠ 这里是**逐字加空格**的装饰写法，光替换「定州中学」永远匹配不到；
-             而且名字一旦在别处改过，这里的原文就再也"认不出来"了 ——
-             所以给它打上 `data-dz-name="spread"`，由 ai_core 的 renameDOM **直接按当前校名重写**
-             （不靠"识别旧字"那套）。 */
+        /* ⚠ 这里是**逐字加空格**的装饰写法，光替换「定州中学」永远匹配不到； */
         var t1 = DOC.createElement('div');
         t1.className = 't1';
         t1.setAttribute('data-dz-name', 'spread');
@@ -13020,7 +12846,7 @@ requestAnimationFrame(loop);
         bar.id = 'dzLaunchBar';
         var chip = DOC.createElement('span');
         chip.className = 'dzVerChip';
-        chip.innerHTML = 'v2.0.5 · 校门入口<span class="dzFootEn"><br>启动器（单机 / 联机）</span>';
+        chip.innerHTML = 'v2.1 · 校门入口<span class="dzFootEn"><br>启动器（单机 / 联机）</span>';
         bar.appendChild(chip);
         l.appendChild(bar);
       }
@@ -13054,7 +12880,7 @@ requestAnimationFrame(loop);
       row.className = 'settingRow';
       row.style.cssText = 'cursor:default;';
       row.innerHTML = '<div style="flex:1;min-width:0;text-align:left">' +
-                        '<div class="sLabel">界面皮肤（v2.0.5）</div>' +
+                        '<div class="sLabel">界面皮肤（v2.1）</div>' +
                         '<div class="sDesc" id="dzSkinSetDesc">已启用 · 赛博校园夜景 + 校门门洞入口</div>' +
                       '</div>';
       /* 放在设置列表最前面，不用滚到底才能看到 */
@@ -13236,7 +13062,7 @@ requestAnimationFrame(loop);
 
     try {
       if (typeof console !== 'undefined' && console.log) {
-        console.log('[dz-ui-skin v2.0.5] 赛博校园 UI 已加载（' + (skinOn ? '新版' : '旧版') + '）');
+        console.log('[dz-ui-skin v2.1] 赛博校园 UI 已加载（' + (skinOn ? '新版' : '旧版') + '）');
       }
     } catch (e) {}
   } catch (err) {
@@ -13252,35 +13078,7 @@ requestAnimationFrame(loop);
 
 
 /* ---------- src-parent/sfx_pro.js ---------- */
-/* =========================================================================
-   src-parent/sfx_pro.js —— 母项目（定中project）游戏内音效升级 v1.8
-   -------------------------------------------------------------------------
-   本文件由 upgrade-parent.mjs 注入到母项目主 IIFE **内部**，
-   因此可以直接访问闭包里的 beep / W / H / profile / saveProfile / player。
-
-   设计原则
-     ① 「包住，不替换」：保留原 `function beep(f,d,t,v)` 的签名与行为，
-        所有 112 处老调用点一个字都不用改。新音色只是让它更好听。
-     ② 绝不让音频拖垮游戏：所有入口 try/catch + `if(!ctx) return`，
-        ctx 建不出来（无音频设备）时直接静默退化成 no-op。
-     ③ 静音时不建节点：音量 0 / 关闭时在函数最前面就返回。
-     ④ 复音上限：同一类声音 50ms 窗口内最多 6 个，超了抢最老的淡出，
-        而不是继续叠（连续射击时这是最大的音质收益）。
-     ⑤ 全程程序化 WebAudio，不引入任何外部音频文件。
-
-   对外接口（window.__dzSfx）
-     .play(name, opt)      播放具名音效
-     .beep(f,d,t,v)        走升级引擎执行一次「老式 beep」（调试/兼容用）
-     .setVolume(v)         母项目音效音量 0..1（同时写回 profile.settings.sfx）
-     .setMusicVolume(v)    音乐音量 0..1（写回 profile.settings.music）
-     .getVolume() / .getMusicVolume()
-     .stats()              限流器 / 复音 / NaN 计数
-     .resetStats()
-     .list()               所有具名音效名
-     .categories()         所有分类
-     .selftest(times)      自检：把所有音效各放一遍，返回问题清单
-     .master()             总线节点状态（调试）
-   ========================================================================= */
+/* src-parent/sfx_pro.js —— 母项目（定中project）游戏内音效升级 v1.8 */
 (function(){
   'use strict';
 
@@ -13383,11 +13181,7 @@ requestAnimationFrame(loop);
         nodes[k] = g;
       }
 
-      /* 共享的「反馈延迟房间感」（无卷积器）：
-         send → preDelay → HP → damp → delay → fb → (回到 damp)
-         返回端再经 lowpass + wet 送回 master。
-         ⚠ 只给**一次性**音效送一点，连续声源一律不送，
-           否则会和秘境侧池核那次 bug 一样堆成一片轰鸣。 */
+      /* send → preDelay → HP → damp → delay → fb → (回到 damp) */
       var send = c.createGain(); send.gain.value = 0.16;
       var pre = c.createDelay(0.5); pre.delayTime.value = 0.021;
       var hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 320; hp.Q.value = 0.7;
@@ -13455,14 +13249,7 @@ requestAnimationFrame(loop);
     return !muted && sfxVol > 0.0001 && !!ensureCtx() && busReady;
   }
 
-  /* ------------------------------------------------------------------ 5. 复音限流器
-     同类声音 50ms 窗口内超过 6 个就抢最老的：8ms 内淡到 0 再停掉。
-     这是「连射不糊」的关键。
-
-     UI 走**单独更宽松**的通道：窗口 40ms、同类上限 10。
-     按键/悬停本来就是手指动作，密度天然低，但连点两下、滑过一排按钮时
-     50ms/6 会把音吃掉 —— 所以给 UI 更短窗口 + 更高上限：
-     既不会被吞，也不会叠成糊（叠到 10 个也只有 ~80ms 跨度）。 */
+  /* 同类声音 50ms 窗口内超过 6 个就抢最老的：8ms 内淡到 0 再停掉。 */
   var WIN = 0.05, MAX_SAME = 6, MAX_TOTAL = 34;
   var UI_WIN = 0.04, UI_MAX_SAME = 10;
   var hist = {}, histAll = [];
@@ -14272,7 +14059,7 @@ requestAnimationFrame(loop);
 
   /* ------------------------------------------------------------------ 12. 全局接口 */
   var api = {
-    version: '2.0.5',
+    version: '2.1',
     play: function(name, opt){
       try{
         opt = opt || {};
@@ -14360,12 +14147,7 @@ requestAnimationFrame(loop);
       }catch(e){ issues.push('selftest 抛异常：' + ((e && e.message) || e)); }
       return issues;
     },
-    /* ---------------------------------------------------------------------
-       v1.8.3b 复位：秘境跑过一轮之后母项目的 UI 音效会变哑（用户实测）。
-       原因方向：限流器的历史表堆积 + AudioContext 被挂起。
-       这里幂等地清历史、解挂 ctx、把被"抢声"计数清零 —— 不动任何增益，
-       所以最坏情况只是没效果，绝不会把声音弄没。
-       --------------------------------------------------------------------- */
+    /* v1.8.3b 复位：秘境跑过一轮之后母项目的 UI 音效会变哑（用户实测）。 */
     /* 硬静场：把**当前还在响**的音效语音全部掐掉（振荡器 stop + 增益归零 + 断开）。
        用在"菜单态却有一局在后台跑"这种异常场面：那局会不停地触发音效，
        把限流器额度吃满（表现就是"奇怪的哒哒声 + 按键音变哑"）。 */
@@ -14409,13 +14191,7 @@ requestAnimationFrame(loop);
     _internals: function(){ return { bus: bus, ctx: ctx, sig: SIG, names: S } }
   };
 
-  /* ---------------------------------------------------------------------
-     v1.9 音频看门狗 —— 修「游戏里突然卡一下之后音效全没了」
-     卡顿（渲染进程 GC / 主线程长时间被占 / 系统省电）会造成两件事：
-       ① AudioContext 被系统挂起 → 之后所有音效静默（连 UI 音也没了）；
-       ② 限流器历史表堆住（挂起期间旧音的 onended 不回调）→ 新声音全被"超额"挡掉。
-     每秒复查一次：被挂起就 resume；历史表异常膨胀就清一次。幂等、无声、不改增益。
-     --------------------------------------------------------------------- */
+  /* v1.9 音频看门狗 —— 修「游戏里突然卡一下之后音效全没了」 */
   var _wdTimer = null;
   (function audioWatchdog() {
     if (_wdTimer) return;
@@ -14437,20 +14213,7 @@ requestAnimationFrame(loop);
 
 
 /* ---------- src-parent/ai_core.js ---------- */
-/* =========================================================================
-   定中project v2.0 · AI 通道 + 创造模式 + 大学生宝宝体质预设
-   -------------------------------------------------------------------------
-   ⚠ 本模块的硬规矩（用一整轮 debug 换来的）：
-     · 自身包在独立 IIFE 里；**模块求值期不引用任何兄弟 IIFE 的东西**
-       （跨 IIFE 引用会 ReferenceError，把后面所有模块的初始化一起打断）。
-     · 所有对外部函数/变量的访问都走 `typeof x === 'function'` 守卫 + try/catch。
-     · 失败一律"静默降级为本地能力"，绝不把游戏弄坏。
-
-   三块内容：
-     ① AIClient  多厂商模板 / 密钥只存 localStorage / 缓存省 token / 超时 / 测试连接
-     ② CreateMode 创造模式（本局不计教学经验）+ 一句话：生成关卡 / 改校名 / 创建角色 / 资源包导出
-     ③ Preset    「大学生宝宝体质」：假期→大学课表（真课表配色）+ 校名换「你」+ 梗内容池
-   ========================================================================= */
+/* 定中project v2.0 · AI 通道 + 创造模式 + 大学生宝宝体质预设 */
 ;(function () {
   'use strict';
 
@@ -16122,27 +15885,7 @@ requestAnimationFrame(loop);
 
 
 /* ---------- src-parent/notice.js ---------- */
-/* =========================================================================
-   定中project v2.0.5 · 开始界面「须知」面板
-   -------------------------------------------------------------------------
-   作者要求（原话）：
-     「开始界面一定会弹出一个需知面板，每次进入都有」
-   五条内容照录，不改写：
-     1 署名  圆圈十四
-     2 声明  所有内容属于公共开源项目，禁止任何商业化
-     3 仅对学校放假吐槽，无任何批判性质或针对性质
-     4 友情链接  同人小游戏定中尖塔 by 艾萨克牛顿  https://na113113-gif.github.io/dingzhong-spire-play/
-     5 喜欢的话也欢迎支持作者 minecraft 服务器  QQ 1098865546
-
-   设计取舍：
-     · **不做"不再提示"**：作者要的就是每次都有，所以没有记住勾选、也不写 localStorage。
-     · **只在"开始界面"弹**：页面加载时一次 + 每次从隐藏变回可见的启动器（＝返回启动器）再一次；
-       不去打扰正在跑的一局（不然暂停回来又被糊一脸）。
-     · **不隐藏启动器**，只盖在上面 —— 启动器一直"在显示"，皮肤那套
-       「菜单与启动器都没露 → 空画面兜底 returnToMenu」就不会误触发（这是本项目踩过的老坑）。
-     · 面板用 `class="overlay"`：皮肤里那条全局 `html body .overlay{top/left/right/bottom:0}`
-       会替我们补四边偏移（Chromium 83 不认 `inset` 简写）。
-   ========================================================================= */
+/* 定中project v2.0.5 · 开始界面「须知」面板 */
 ;(function () {
   'use strict';
 
@@ -16382,46 +16125,749 @@ requestAnimationFrame(loop);
 })();
 
 
+/* ---------- src-parent/v21.js ---------- */
+/* v2.1 特性模块：设置去重 / 活动范围 / 作业本学科 / 成就 / 暂停结算 / 分数梯度 / NEW 角标
+   全部运行时挂钩，父项目 parent-v1.5.html 不改一个字节。 */
+;(function () {
+  'use strict';
+  var WIN = window, D = document;
+  function $(id) { try { return D.getElementById(id); } catch (e) { return null; } }
+  function log() { try { console.log.apply(console, ['[DZ-V21]'].concat([].slice.call(arguments))); } catch (e) {} }
+  function beep2(f, d, t, v) { try { if (typeof beep === 'function') beep(f, d, t || 'sine', v || .05); } catch (e) {} }
+
+  var ST = { installed: [], range: false, hw: false, ach: 0, tier: 0, runScript: false, newHooked: false, achHook: false };
+
+  /* 1. 设置面板：教程项只留一个 */
+  function dedupeTutorialRows() {
+    var panel = $('settingsPanel');
+    if (!panel || panel.classList.contains('hidden')) return;
+    var list = $('settingsList'); if (!list) return;
+    var rows = list.querySelectorAll('.settingRow'), kept = false, i;
+    for (i = 0; i < rows.length; i++) {
+      if ((rows[i].textContent || '').indexOf('查看教程') < 0) continue;
+      if (!kept) { kept = true; if (!rows[i].id) rows[i].id = 'dzTutorialRow'; continue; }
+      if (rows[i].parentNode) rows[i].parentNode.removeChild(rows[i]);
+    }
+  }
+
+  /* 2. 玩家活动范围 ×1.4（纵向带；横向本来就是满屏） */
+  function hookRange() {
+    if (ST.range) return true;
+    if (typeof getYRange !== 'function') return false;
+    var orig = getYRange;
+    getYRange = function () {
+      var r = orig.apply(this, arguments);
+      var h = r.max - r.min;
+      return { min: Math.round(r.max - h * 1.4), max: r.max };
+    };
+    ST.range = true;
+    return true;
+  }
+
+  /* 3. 作业本：给「学科类」组件补一句课本知识。考试类组件不补（它们是卷子，不是学科）。 */
+  var KNOW = {
+    budengshi: '不等式两边同乘或同除一个负数，不等号方向要反过来。',
+    liti: '线面平行判定：平面外一条直线与平面内一条直线平行，则该直线与平面平行。',
+    sanjiao: 'y=sin x 的最小正周期是 2π，振幅 1；左右平移不改变形状。',
+    jiexi: '椭圆离心率 e=c/a 且 0<e<1；双曲线 e>1；抛物线 e=1。',
+    gailv: '互斥事件 P(A∪B)=P(A)+P(B)；对立事件概率之和为 1。',
+    daoshu: 'f′(x)>0 时函数单调递增；f′(x)=0 且在两侧变号处取极值。',
+    gushi: '知人论世：先看作者与朝代，再抓意象（月/雁/柳）推情感。',
+    zuowen: '议论文三要素：论点、论据、论证；开头亮观点，结尾回扣。',
+    yuedu: '先读题干再读原文，绝大多数答案都能在文中定位到。',
+    wenyan: '一词多义看语境：古义「走」是跑，「去」是离开，「妻子」是妻和子。',
+    xiuci: '比喻、拟人、夸张、排比 —— 作用是让表达更形象、更有气势。',
+    neineng: '改变内能有两种方式：做功和热传递，热力学第一定律 ΔU=W+Q。',
+    dongliang: '动量守恒：系统所受合外力为零时，总动量保持不变。',
+    dianci: '楞次定律：感应电流的磁场总要阻碍引起它的磁通量的变化。',
+    wanyou: 'F=GMm/r²；轨道半径越大，卫星线速度越小、周期越长。',
+    guangxue: '真空光速 c=3×10⁸ m/s；折射率 n=c/v，光从空气入水会偏向法线。',
+    kenifanying: '可逆反应：同一条件下正、逆反应同时进行，平衡时 v正=v逆，各组分浓度不再变化。',
+    fenjie: '分解反应：一种物质生成两种或多种物质，如 2H₂O₂ →(MnO₂) 2H₂O + O₂↑。',
+    jianshu: '减数分裂：染色体只复制一次、细胞连续分裂两次，配子染色体数目减半。',
+    fenghua: '风化作用：岩石在原地被破坏，分物理风化、化学风化和生物风化。'
+  };
+  function injectKnow() {
+    try {
+      var grid = $('compGrid'); if (!grid) return;
+      var items = grid.children, i, j;
+      for (i = 0; i < items.length; i++) {
+        var it = items[i];
+        if (it.querySelector('.compKnow')) continue;
+        var nm = it.querySelector && it.querySelector('.compName');
+        if (!nm || !nm.firstChild) continue;
+        var name = String(nm.firstChild.nodeValue || '').trim();
+        var key = null;
+        for (j in KNOW) { if (KNOW.hasOwnProperty(j) && COMPONENTS[j] && COMPONENTS[j].name === name) { key = j; break; } }
+        if (!key || !KNOW[key]) continue;
+        if (COMPONENTS[key].cls === 'exam') continue;
+        var k = D.createElement('div');
+        k.className = 'compKnow';
+        k.textContent = KNOW[key];
+        it.appendChild(k);
+      }
+    } catch (e) {}
+  }
+  function hookHw() {
+    if (ST.hw) return true;
+    if (typeof renderHwPanel !== 'function') return false;
+    var css = D.createElement('style');
+    css.id = 'dzV21HwCss';
+    css.textContent =
+      '.compItem .compKnow{margin-top:5px;padding-top:4px;border-top:1px dashed rgba(120,160,255,.22);' +
+      'font-size:10px;line-height:1.5;color:#8fa6d8;-webkit-text-size-adjust:100%;text-size-adjust:100%;}';
+    try { D.head.appendChild(css); } catch (e) {}
+    var orig = renderHwPanel;
+    renderHwPanel = function () {
+      orig.apply(this, arguments);
+      injectKnow();
+    };
+    ST.hw = true;
+    return true;
+  }
+
+  /* 4. 成就系统 + 右上角弹窗 */
+  var ACH = [
+    { id: 'first', name: '初上讲台', desc: '完成第一局', icon: '📘', t: function (c) { return c.games >= 1; } },
+    { id: 'lv5', name: '进阶教师', desc: '任意角色达到 Lv.5', icon: '🎓', t: function (c) { return c.maxLv >= 5; } },
+    { id: 'lv10', name: '名师', desc: '任意角色满级 Lv.10', icon: '🏆', t: function (c) { return c.maxLv >= 10; } },
+    { id: 's1k', name: '小有名气', desc: '单局教学点 1000', icon: '⭐', t: function (c) { return c.best >= 1000; } },
+    { id: 's5k', name: '学生懈怠', desc: '单局教学点 5000 · 假期开始加速', icon: '😴', t: function (c) { return c.best >= 5000; } },
+    { id: 's10k', name: '堆积如山', desc: '单局教学点 10000 · 假期体积增大', icon: '⛰️', t: function (c) { return c.best >= 10000; } },
+    { id: 's20k', name: '红边假期', desc: '单局教学点 20000 · 假期血量 +20', icon: '🔴', t: function (c) { return c.best >= 20000; } },
+    { id: 's50k', name: '周末降临', desc: '单局教学点 50000 · 假期会掉落小周末', icon: '🌴', t: function (c) { return c.best >= 50000; } },
+    { id: 'ideabox', name: '开箱', desc: '击败一个意见箱', icon: '📦', t: function (c) { return c.ideabox >= 1; } },
+    { id: 'boss', name: '长假终结者', desc: '击败寒暑假 Boss', icon: '💥', t: function (c) { return c.boss >= 1; } },
+    { id: 'comp1', name: '第一件组件', desc: '获得 1 个组件', icon: '🧩', t: function (c) { return c.comps >= 1; } },
+    { id: 'comp10', name: '零件库', desc: '获得 10 个组件', icon: '🧰', t: function (c) { return c.comps >= 10; } },
+    { id: 'comp4', name: '满配', desc: '同时装备 4 个组件', icon: '🎒', t: function (c) { return c.equipped >= 4; } },
+    { id: 'coll5', name: '收藏家', desc: '收集 5 件收藏品', icon: '🗃️', t: function (c) { return c.colls >= 5; } },
+    { id: 't3', name: '三分钟', desc: '单局存活 3 分钟', icon: '⏱️', t: function (c) { return c.time >= 180; } },
+    { id: 't10', name: '十分钟', desc: '单局存活 10 分钟', icon: '🕙', t: function (c) { return c.time >= 600; } },
+    { id: 'school', name: '校园传说', desc: '游玩 20 局', icon: '🏫', t: function (c) { return c.games >= 20; } }
+  ];
+
+  function toast(title, body, icon) {
+    try {
+      var stage = $('stage') || D.body;
+      var box = $('dzAchToast');
+      if (!box) {
+        var st = D.createElement('style');
+        st.id = 'dzAchCss';
+        st.textContent =
+          '#dzAchToast{position:absolute;right:3%;top:64px;z-index:60;pointer-events:none;' +
+          'display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:66%;' +
+          '-webkit-text-size-adjust:100%;text-size-adjust:100%;}' +
+          '#dzAchToast .ac{display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:12px;' +
+          'background:linear-gradient(180deg,rgba(14,28,54,.97),rgba(8,16,32,.97));' +
+          'border:1.5px solid rgba(255,209,102,.55);box-shadow:0 8px 26px rgba(0,0,0,.6);' +
+          'color:#ffe9b8;font-family:inherit;font-size:11.5px;font-weight:800;line-height:1.35;' +
+          'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
+          'animation:dzAchIn .28s cubic-bezier(.2,1.3,.4,1);}' +
+          '#dzAchToast .ac .i{font-size:16px;line-height:1;}' +
+          '#dzAchToast .ac .d{color:#9db6dd;font-weight:600;font-size:10px;margin-left:2px;}' +
+          '@keyframes dzAchIn{from{opacity:0;transform:translateX(26px);}to{opacity:1;transform:none;}}';
+        try { D.head.appendChild(st); } catch (e) {}
+        box = D.createElement('div');
+        box.id = 'dzAchToast';
+        box.setAttribute('data-dz-block', '1');
+        stage.appendChild(box);
+      }
+      var el = D.createElement('div');
+      el.className = 'ac';
+      el.innerHTML = '<span class="i">' + (icon || '🏅') + '</span><span>' + title +
+        '</span><span class="d">' + (body || '') + '</span>';
+      box.appendChild(el);
+      setTimeout(function () {
+        el.style.transition = 'opacity .35s ease,transform .35s ease';
+        el.style.opacity = '0'; el.style.transform = 'translateX(26px)';
+        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 380);
+      }, 3400);
+    } catch (e) {}
+  }
+
+  function achStore() {
+    try { if (!profile.achievements) profile.achievements = {}; return profile.achievements; }
+    catch (e) { return {}; }
+  }
+  function achCountGot() {
+    var store = achStore(), n = 0, i;
+    for (i = 0; i < ACH.length; i++) if (store[ACH[i].id]) n++;
+    return n;
+  }
+  function unlock(id) {
+    var a = null, i;
+    for (i = 0; i < ACH.length; i++) if (ACH[i].id === id) { a = ACH[i]; break; }
+    if (!a) return;
+    var store = achStore();
+    if (store[id]) return;
+    store[id] = Date.now();
+    try { saveProfile(); } catch (e) {}
+    ST.ach++;
+    toast(a.name, a.desc, a.icon);
+    beep2(1100, .09, 'sine', .05);
+    setTimeout(function () { beep2(1480, .12, 'sine', .045); }, 110);
+  }
+  function counters() {
+    var c = { games: 0, best: 0, comps: 0, equipped: 0, colls: 0, maxLv: 1, time: 0, ideabox: 0, boss: 0 };
+    try {
+      c.games = profile.totalGames || 0;
+      c.best = profile.best || 0;
+      c.comps = (profile.components || []).length;
+      c.equipped = (profile.equippedComponents || []).length;
+      c.colls = (profile.collections || []).length;
+      c.ideabox = WIN.__dzV21.ideabox || 0;
+      c.boss = WIN.__dzV21.boss || 0;
+      var k; for (k in profile.chars) { if (profile.chars[k] && profile.chars[k].level > c.maxLv) c.maxLv = profile.chars[k].level; }
+      c.time = (state === 'playing' || state === 'paused') ? Math.floor(elapsed || 0) : 0;
+      if (c.best < Math.floor((state === 'playing' ? score : 0) || 0)) c.best = Math.floor(score);
+    } catch (e) {}
+    return c;
+  }
+  function tickAch() {
+    var c = counters(), i;
+    for (i = 0; i < ACH.length; i++) { try { if (ACH[i].t(c)) unlock(ACH[i].id); } catch (e) {} }
+  }
+
+  /* 5. 暂停界面「返回主菜单」完整结算（父项目已算经验/饭卡，这里补收藏品 + 最高分 + 反馈） */
+  function hookReturn() {
+    if (typeof returnToMenu !== 'function') return false;
+    var orig = returnToMenu;
+    returnToMenu = function (giveExp) {
+      var info = null;
+      try {
+        var running = (pausedFrom === 'playing' || pausedFrom === 'dorm');
+        if (giveExp && running) {
+          var newColls = collectibles.filter(function (c) { return profile.collections.indexOf(c.id) < 0; });
+          newColls.forEach(function (c) { if (profile.collections.indexOf(c.id) < 0) profile.collections.push(c.id); });
+          var fs = Math.floor(score || 0);
+          if (fs > (profile.best || 0)) profile.best = fs;
+          try { saveProfile(); } catch (e) {}
+          info = { score: fs, coins: coins | 0, exp: calcExpGain(), colls: newColls.length };
+        }
+      } catch (e) {}
+      var out = orig.apply(this, arguments);
+      if (info) {
+        toast('已自动结算', '教学点 ' + info.score + ' · 教学经验 +' + info.exp +
+          ' · 饭卡 +' + info.coins + (info.colls ? ' · 收藏品 +' + info.colls : ''), '📒');
+        tickAch();
+      }
+      return out;
+    };
+    return true;
+  }
+
+  /* 6. 分数梯度强化（只在非高考剧本生效） */
+  var TIER_MSG = ['', '学生懈怠上升 · 假期下落加快', '假期体积增大', '假期获得红边 · 血量 +20', '假期被摧毁时可能放出小周末'];
+  function tier() {
+    var s = score || 0;
+    return s >= 50000 ? 4 : s >= 20000 ? 3 : s >= 10000 ? 2 : s >= 5000 ? 1 : 0;
+  }
+  function scaleObstacles() {
+    var k = tier(); if (k <= 0 || !obstacles) return;
+    for (var i = 0; i < obstacles.length; i++) {
+      var o = obstacles[i];
+      if (!o || !o.kind) continue;
+      if (o.__b21 === undefined) { o.__b21 = { vy: o.vy || 0, w: o.w, h: o.h, r: o.r }; o.__hpAdd = 0; }
+      var b = o.__b21;
+      if (k >= 1 && b.vy && o.kind !== 'hoop') o.vy = b.vy * 1.15;
+      if (k >= 2) { if (b.w) o.w = b.w * 1.15; if (b.h) o.h = b.h * 1.15; if (b.r) o.r = b.r * 1.15; }
+      var want = (k >= 3 && (o.hp != null && o.hp !== 9999)) ? 20 : 0;
+      if (want > o.__hpAdd) {
+        var d = want - o.__hpAdd;
+        o.hp += d; if (o.maxHp != null) o.maxHp += d;
+        o.__hpAdd = want;
+      }
+      o.__red = (k >= 3);
+    }
+  }
+  function spawnWeekend() {
+    try {
+      obstacles.push({
+        kind: 'calendar', x: rand(24, W - 24), y: -40, w: 26, h: 30, vy: 250,
+        days: 2, hp: 2, maxHp: 2, rot: 0, phase: Math.random() * TAU, flash: 0,
+        slowT: 0, hoverT: 0, vx: 0, color: '#6a994e', label: '周末', dateLabel: '周六'
+      });
+      addFloater(W / 2, H * 0.42, '小周末 掉落！', '#6a994e');
+      beep2(980, .1, 'sine', .05);
+    } catch (e) {}
+  }
+  function redEdge(o, w, h, rad, useRot) {
+    if (!o || !o.__red) return;
+    try {
+      ctx.save();
+      ctx.translate(o.x + (o.w || 0) / 2, o.y + (o.h || 0) / 2);
+      if (useRot) ctx.rotate(o.rot || 0);
+      ctx.shadowColor = 'rgba(255,59,59,.9)'; ctx.shadowBlur = 14;
+      ctx.strokeStyle = '#ff3b3b'; ctx.lineWidth = 3;
+      rr(-w / 2, -h / 2, w, h, rad); ctx.stroke();
+      ctx.restore();
+    } catch (e) {}
+  }
+  function hookDraw() {
+    if (typeof drawCalendar === 'function' && !drawCalendar.__v21) {
+      var a = drawCalendar;
+      drawCalendar = function (o) { a.apply(this, arguments); redEdge(o, o.w, o.h, 12, true); };
+      drawCalendar.__v21 = 1;
+    }
+    if (typeof drawElite === 'function' && !drawElite.__v21) {
+      var b = drawElite;
+      drawElite = function (o) { b.apply(this, arguments); redEdge(o, o.w, o.h, 12, false); };
+      drawElite.__v21 = 1;
+    }
+    if (typeof drawBall === 'function' && !drawBall.__v21) {
+      var c = drawBall;
+      drawBall = function (o) {
+        c.apply(this, arguments);
+        if (!o || !o.__red) return;
+        try {
+          ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.rot || 0);
+          ctx.shadowColor = 'rgba(255,59,59,.9)'; ctx.shadowBlur = 14;
+          ctx.strokeStyle = '#ff3b3b'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(0, 0, o.r, 0, TAU); ctx.stroke();
+          ctx.restore();
+        } catch (e) {}
+      };
+      drawBall.__v21 = 1;
+    }
+    return true;
+  }
+  function hookLadder() {
+    if (typeof update === 'function' && !update.__v21) {
+      var u = update;
+      update = function (dt) {
+        var r = u.apply(this, arguments);
+        try {
+          if (WIN.__scriptMode) { ST.runScript = true; }
+          else if (state === 'playing') {
+            scaleObstacles();
+            var k = tier();
+            if (k !== ST.tier) {
+              if (k > ST.tier) {
+                addFloater(W / 2, H * 0.30, '⚠ ' + TIER_MSG[k], k >= 3 ? '#ff6b6b' : '#ffd166');
+                beep2(300, .22, 'sawtooth', .06);
+              }
+              ST.tier = k;
+            }
+          }
+        } catch (e) {}
+        return r;
+      };
+      update.__v21 = 1;
+    }
+    if (typeof destroyObstacle === 'function' && !destroyObstacle.__v21) {
+      var d = destroyObstacle;
+      destroyObstacle = function (i) {
+        var o = obstacles[i];
+        var holiday = !!(o && (o.kind === 'calendar' || o.kind === 'elite' || o.kind === 'ball'));
+        var r = d.apply(this, arguments);
+        try { if (holiday && !WIN.__scriptMode && tier() >= 4 && Math.random() < 0.2) spawnWeekend(); } catch (e) {}
+        return r;
+      };
+      destroyObstacle.__v21 = 1;
+    }
+    if (typeof killBoss === 'function' && !killBoss.__v21) {
+      var kb = killBoss;
+      killBoss = function (silent) {
+        var kind = boss && boss.kind;
+        var r = kb.apply(this, arguments);
+        try {
+          if (kind === 'ideabox') WIN.__dzV21.ideabox = (WIN.__dzV21.ideabox || 0) + 1;
+          else if (kind === 'holiday') WIN.__dzV21.boss = (WIN.__dzV21.boss || 0) + 1;
+          tickAch();
+        } catch (e) {}
+        return r;
+      };
+      killBoss.__v21 = 1;
+    }
+    hookDraw();
+    return true;
+  }
+
+  /* 7. 结束语随本局分值变化（非高考剧本） */
+  function endLine(s) {
+    if (s >= 50000) return '连周末都被你打出来了 —— 可假期是无穷的。';
+    if (s >= 20000) return '假期堆成了山，红边的那些格外凶。';
+    if (s >= 10000) return '学生开始懈怠了：这是你的功劳，也是你的麻烦。';
+    if (s >= 5000) return '你让整个班都学会了摸鱼，假期也因此更快了。';
+    if (s >= 1000) return '勉强撑住了几波，作业本还是空的。';
+    return '你还太年轻，假期才刚开始。';
+  }
+  function hookEnd() {
+    if (typeof endGame !== 'function' || endGame.__v21) return false;
+    var orig = endGame;
+    endGame = function (reason) {
+      var script = !!ST.runScript || !!WIN.__scriptMode;
+      var s = Math.floor(score || 0);
+      var r = orig.apply(this, arguments);
+      try { if (!script && goMsgEl) goMsgEl.textContent = endLine(s); tickAch(); } catch (e) {}
+      ST.runScript = false; ST.tier = 0;
+      return r;
+    };
+    endGame.__v21 = 1;
+    return true;
+  }
+  function hookReset() {
+    if (typeof reset !== 'function' || reset.__v21) return false;
+    var orig = reset;
+    reset = function () { ST.runScript = false; ST.tier = 0; return orig.apply(this, arguments); };
+    reset.__v21 = 1;
+    return true;
+  }
+
+  /* 8. 设置里看成就列表 */
+  function ensureAchRow() {
+    try {
+      /* 不判断面板是否可见：本函数会在 renderSettingsPanel 渲染途中被调用，
+         那一刻面板还没 unhide，加了可见性判断就永远加不上。 */
+      var list = $('settingsList'); if (!list) return;
+      var txt = '已解锁 ' + achCountGot() + ' / ' + ACH.length + ' · 点击查看';
+      var row0 = $('dzAchRow');
+      if (row0) {                      /* 已存在就只刷新数字，别让行上的数比面板旧 */
+        var d0 = row0.querySelector('.sDesc');
+        if (d0 && d0.textContent !== txt) d0.textContent = txt;
+        return;
+      }
+      var row = D.createElement('div');
+      row.id = 'dzAchRow';
+      row.className = 'settingRow';
+      row.innerHTML = '<div><div class="sLabel">🏅 成就列表</div><div class="sDesc">已解锁 ' +
+        achCountGot() + ' / ' + ACH.length + ' · 点击查看</div></div>' +
+        '<div style="color:#ffd166;font-size:20px;line-height:1">›</div>';
+      row.addEventListener('click', function () {
+        try { var sp = $('settingsPanel'); if (sp) sp.classList.add('hidden'); } catch (e) {}
+        openAchPanel();
+        beep2(760, .06, 'sine', .04);
+      });
+      list.appendChild(row);
+    } catch (e) {}
+  }
+  function hookAchRow() {
+    if (ST.achHook) return true;
+    if (typeof renderSettingsPanel !== 'function') return false;
+    var orig = renderSettingsPanel;
+    renderSettingsPanel = function () {
+      orig.apply(this, arguments);
+      ensureAchRow();
+    };
+    ST.achHook = true;
+    ensureAchRow();
+    return true;
+  }
+  function achPanelCss() {
+    if ($('dzAchPanelCss')) return;
+    var css = D.createElement('style');
+    css.id = 'dzAchPanelCss';
+    css.textContent = [
+      '#dzAchPanel{position:absolute;left:0;right:0;top:0;bottom:0;z-index:70;display:flex;',
+        'align-items:center;justify-content:center;background:rgba(4,8,18,.82);',
+        '-webkit-text-size-adjust:100%;text-size-adjust:100%;}',
+      /* 关不掉的关键：父项目的 .hidden 只对 .overlay 做淡出，本面板是 ID 选择器的 display:flex，
+         没有这条 ID+.hidden 规则的话，加 class 也不会隐藏。项目里其它面板都这么补。 */
+      '#dzAchPanel.hidden{display:none;}',
+      '#dzAchPanel .ap{width:88%;max-width:400px;max-height:78%;display:flex;flex-direction:column;',
+        'border-radius:14px;padding:12px 12px 10px;background:linear-gradient(180deg,rgba(12,22,44,.98),rgba(6,12,26,.98));',
+        'border:1.5px solid rgba(120,160,255,.28);box-shadow:0 18px 50px rgba(0,0,0,.7);}',
+      '#dzAchPanel h3{margin:0;font-family:inherit;font-size:15px;font-weight:900;line-height:1.3;',
+        'color:#eaf2ff;letter-spacing:2px;text-align:center;}',
+      '#dzAchPanel .apSub{margin:3px 0 8px;text-align:center;font-family:inherit;font-size:10px;',
+        'font-weight:700;line-height:1.4;color:#8fa6d8;}',
+      '#dzAchPanel .apList{overflow-y:auto;flex:1 1 auto;border-top:1px dashed rgba(120,160,255,.18);}',
+      '#dzAchPanel .apIt{display:flex;align-items:center;gap:8px;padding:7px 4px;',
+        'border-bottom:1px dashed rgba(120,160,255,.12);}',
+      '#dzAchPanel .apIt .ic{font-size:17px;width:22px;text-align:center;flex:0 0 auto;}',
+      '#dzAchPanel .apIt .tx{flex:1 1 auto;min-width:0;}',
+      '#dzAchPanel .apIt .nm{font-family:inherit;font-size:12px;font-weight:800;line-height:1.3;color:#ffe9b8;}',
+      '#dzAchPanel .apIt .ds{font-family:inherit;font-size:10px;font-weight:600;line-height:1.35;color:#8fa6d8;}',
+      '#dzAchPanel .apIt.lock .nm{color:#6f8cb4;}',
+      '#dzAchPanel .apIt.lock .ic{filter:grayscale(1);opacity:.5;}',
+      '#dzAchPanel .apIt .st{font-family:inherit;font-size:10px;font-weight:800;color:#51cf66;flex:0 0 auto;}',
+      '#dzAchPanel .apIt.lock .st{color:#4a5f80;}',
+      '#dzAchPanel button{margin-top:9px;padding:9px 0;border-radius:9px;border:none;width:100%;',
+        'background:linear-gradient(135deg,#4dabf7,#1864ab);color:#fff;font-family:inherit;font-size:12px;',
+        'font-weight:900;letter-spacing:2px;cursor:pointer;}'
+    ].join('');
+    try { D.head.appendChild(css); } catch (e) {}
+  }
+  function openAchPanel() {
+    try {
+      achPanelCss();
+      var box = $('dzAchPanel');
+      if (!box) {
+        box = D.createElement('div');
+        box.id = 'dzAchPanel';
+        box.setAttribute('data-dz-block', '1');
+        box.innerHTML = '<div class="ap"><h3>成 就</h3><div class="apSub"></div>' +
+          '<div class="apList"></div><button id="dzAchClose">关 闭</button></div>';
+        ($('stage') || D.body).appendChild(box);
+        var closeFn = function (e) {
+          try { if (e && e.preventDefault) e.preventDefault(); } catch (x) {}
+          box.classList.add('hidden');
+        };
+        try {
+          var cbtn = $('dzAchClose');
+          if (cbtn) {
+            cbtn.addEventListener('click', closeFn);
+            cbtn.addEventListener('pointerdown', closeFn);   /* 手机上也一定点得动 */
+          }
+          box.addEventListener('pointerdown', function (e) { if (e.target === box) closeFn(e); });
+        } catch (e) {}
+      }
+      var store = achStore(), html = '', i;
+      for (i = 0; i < ACH.length; i++) {
+        var a = ACH[i], on = !!store[a.id];
+        html += '<div class="apIt' + (on ? '' : ' lock') + '"><span class="ic">' + (on ? a.icon : '🔒') + '</span>' +
+          '<span class="tx"><span class="nm">' + a.name + '</span><br><span class="ds">' + a.desc + '</span></span>' +
+          '<span class="st">' + (on ? '已解锁' : '未解锁') + '</span></div>';
+      }
+      box.querySelector('.apSub').textContent = '已解锁 ' + achCountGot() + ' / ' + ACH.length + ' · 游戏里达成即弹窗';
+      box.querySelector('.apList').innerHTML = html;
+      box.classList.remove('hidden');
+    } catch (e) {}
+  }
+
+  /* 9. 新组件 / 新藏品 → 菜单对应按钮挂 NEW，点开对应面板即消 */
+  function badge(btn, on) {
+    if (!btn) return;
+    var b = btn.querySelector ? btn.querySelector('.dzNew') : null;
+    if (!on) { if (b && b.parentNode) b.parentNode.removeChild(b); return; }
+    if (b) return;
+    b = D.createElement('span');
+    b.className = 'dzNew';
+    b.textContent = 'NEW';
+    btn.appendChild(b);
+  }
+  function paintNew() {
+    try {
+      var p = profile;
+      var hasC = (p.dzNewComps || []).length > 0, hasL = (p.dzNewColls || []).length > 0;
+      badge($('btnComps'), hasC);
+      badge($('hwBtn'), hasC);
+      badge($('btnColl'), hasL);
+    } catch (e) {}
+  }
+  function syncNew() {
+    try {
+      var p = profile;
+      if (!p.dzSeenComps) p.dzSeenComps = (p.components || []).slice();
+      if (!p.dzSeenColls) p.dzSeenColls = (p.collections || []).slice();
+      if (!p.dzNewComps) p.dzNewComps = [];
+      if (!p.dzNewColls) p.dzNewColls = [];
+      var comps = p.components || [], colls = p.collections || [], ch = false, i, id;
+      for (i = 0; i < comps.length; i++) {
+        id = comps[i];
+        if (p.dzSeenComps.indexOf(id) < 0) {
+          p.dzSeenComps.push(id);
+          if (p.dzNewComps.indexOf(id) < 0) p.dzNewComps.push(id);
+          ch = true;
+        }
+      }
+      for (i = 0; i < colls.length; i++) {
+        id = colls[i];
+        if (p.dzSeenColls.indexOf(id) < 0) {
+          p.dzSeenColls.push(id);
+          if (p.dzNewColls.indexOf(id) < 0) p.dzNewColls.push(id);
+          ch = true;
+        }
+      }
+      if (ch) { try { saveProfile(); } catch (e) {} }
+    } catch (e) {}
+    paintNew();
+  }
+  function clearNew(what) {
+    try {
+      if (what === 'comp') profile.dzNewComps = [];
+      if (what === 'coll') profile.dzNewColls = [];
+      try { saveProfile(); } catch (e) {}
+      paintNew();
+    } catch (e) {}
+  }
+  function hookNewButtons() {
+    if (ST.newHooked) return true;
+    var cb = $('btnComps'), cl = $('btnColl');
+    if (!cb || !cl) return false;
+    if (!$('dzNewCss')) {
+      var css = D.createElement('style');
+      css.id = 'dzNewCss';
+      css.textContent = '.dzNew{display:inline-block;margin-left:4px;padding:1px 4px;border-radius:6px;' +
+        'background:linear-gradient(180deg,#ff6b6b,#c1121f);color:#fff;font-family:inherit;font-size:8px;' +
+        'font-weight:900;line-height:1.5;letter-spacing:.5px;vertical-align:middle;' +
+        'box-shadow:0 0 8px rgba(255,80,80,.6);-webkit-text-size-adjust:100%;text-size-adjust:100%;}';
+      try { D.head.appendChild(css); } catch (e) {}
+    }
+    cb.addEventListener('click', function () { clearNew('comp'); });
+    cl.addEventListener('click', function () { clearNew('coll'); });
+    var hb = $('hwBtn');
+    if (hb) hb.addEventListener('pointerdown', function () { clearNew('comp'); });
+    ST.newHooked = true;
+    paintNew();
+    return true;
+  }
+
+  function install() {
+    var ok = [];
+    if (hookRange()) ok.push('活动范围');
+    if (hookHw()) ok.push('作业本学科');
+    if (hookReturn()) ok.push('暂停结算');
+    if (hookLadder()) ok.push('分数梯度');
+    if (hookEnd()) ok.push('结束语');
+    if (hookReset()) ok.push('重置钩子');
+    if (hookAchRow()) ok.push('成就入口');
+    if (hookNewButtons()) ok.push('NEW角标');
+    try { syncNew(); } catch (e) {}
+    ST.installed = ok;
+    log('已安装：' + ok.join(' / '));
+  }
+
+  WIN.__dzV21 = WIN.__dzV21 || {};
+  WIN.__dzV21.ideabox = WIN.__dzV21.ideabox || 0;
+  WIN.__dzV21.boss = WIN.__dzV21.boss || 0;
+  WIN.__dzV21.tier = tier;
+  WIN.__dzV21.endLine = endLine;
+  WIN.__dzV21.know = KNOW;
+  WIN.__dzV21.ACH = ACH;
+  WIN.__dzV21.toast = toast;
+  WIN.__dzV21.unlock = unlock;
+  /* 自检入口：探针在页面全局作用域，够不到 IIFE 里的东西，统一从这里进 */
+  WIN.__dzV21.drive = {
+    setScore: function (v) { try { score = v; return Math.floor(score); } catch (e) { return null; } },
+    getScore: function () { try { return Math.floor(score); } catch (e) { return null; } },
+    renderHw: function () { try { renderHwPanel(); return true; } catch (e) { return false; } },
+    openSettings: function () {
+      try { renderSettingsPanel(); var p = $('settingsPanel'); if (p) p.classList.remove('hidden'); return true; }
+      catch (e) { return false; }
+    },
+    closeSettings: function () { try { var p = $('settingsPanel'); if (p) p.classList.add('hidden'); return true; } catch (e) { return false; } },
+    tutorialRows: function () {
+      var list = $('settingsList'); if (!list) return -1;
+      var rows = list.querySelectorAll('.settingRow'), n = 0, i;
+      for (i = 0; i < rows.length; i++) if ((rows[i].textContent || '').indexOf('查看教程') >= 0) n++;
+      return n;
+    },
+    knowCount: function () { var g = $('compGrid'); return g ? g.querySelectorAll('.compKnow').length : -1; },
+    compItems: function () { var g = $('compGrid'); return g ? g.children.length : -1; },
+    knowNames: function () {
+      try {
+        var g = $('compGrid'), yes = [], no = [], i;
+        if (!g) return null;
+        for (i = 0; i < g.children.length; i++) {
+          var it = g.children[i], nm = it.querySelector('.compName');
+          if (!nm || !nm.firstChild) continue;
+          var name = String(nm.firstChild.nodeValue || '').trim();
+          (it.querySelector('.compKnow') ? yes : no).push(name);
+        }
+        return { yes: yes, no: no };
+      } catch (e) { return null; }
+    },
+    examKnowBad: function () {
+      try {
+        var g = $('compGrid'), bad = [], i, k;
+        if (!g) return null;
+        for (i = 0; i < g.children.length; i++) {
+          var it = g.children[i], nm = it.querySelector('.compName');
+          if (!nm || !nm.firstChild) continue;
+          var name = String(nm.firstChild.nodeValue || '').trim();
+          for (k in COMPONENTS) { if (COMPONENTS[k].name === name) break; }
+          if (COMPONENTS[k] && COMPONENTS[k].cls === 'exam' && it.querySelector('.compKnow')) bad.push(name);
+        }
+        return bad;
+      } catch (e) { return ['err:' + (e && e.message)]; }
+    },
+    spawnCalendar: function () { try { spawnCalendar(); return obstacles.length; } catch (e) { return -1; } },
+    obstacles: function () {
+      try {
+        return obstacles.map(function (o) {
+          return { k: o.kind, hp: o.hp, w: Math.round(o.w || 0), vy: Math.round(o.vy || 0), red: !!o.__red };
+        });
+      } catch (e) { return null; }
+    },
+    tick: function (dt) { try { update(dt || 0.016); return true; } catch (e) { return false; } },
+    forcePlay: function (v) { try { state = (v === false ? 'menu' : 'playing'); return state; } catch (e) { return null; } },
+    returnToMenu: function (giveExp) { try { returnToMenu(giveExp !== false); return true; } catch (e) { return false; } },
+    pause: function () { try { pausedFrom = 'playing'; state = 'paused'; return true; } catch (e) { return false; } },
+    achCount: function () { try { return Object.keys(profile.achievements || {}).length; } catch (e) { return -1; } },
+    stats: function () {
+      try {
+        return {
+          best: profile.best || 0, games: profile.totalGames || 0, coins: profile.totalCoins || 0,
+          comps: (profile.components || []).length, colls: (profile.collections || []).length,
+          ach: Object.keys(profile.achievements || {}).length, tier: tier()
+        };
+      } catch (e) { return { err: String(e && e.message) }; }
+    },
+    toasts: function () {
+      var t = $('dzAchToast'); if (!t) return [];
+      var a = [], i; for (i = 0; i < t.children.length; i++) a.push(String(t.children[i].textContent || ''));
+      return a;
+    },
+    toastCount: function () { var t = $('dzAchToast'); return t ? t.children.length : -1; },
+    grantComponent: function (id) {
+      try { if (profile.components.indexOf(id) < 0) profile.components.push(id); saveProfile(); return profile.components.length; }
+      catch (e) { return -1; }
+    },
+    grantCollectible: function (id) {
+      try { if (profile.collections.indexOf(id) < 0) profile.collections.push(id); saveProfile(); return profile.collections.length; }
+      catch (e) { return -1; }
+    },
+    syncNew: function () { syncNew(); return true; },
+    clearNew: function (w) { clearNew(w); return true; },
+    newState: function () {
+      try {
+        return {
+          newComps: (profile.dzNewComps || []).length, newColls: (profile.dzNewColls || []).length,
+          badgeComps: !!document.querySelector('#btnComps .dzNew'),
+          badgeColl: !!document.querySelector('#btnColl .dzNew'),
+          badgeHwBtn: !!document.querySelector('#hwBtn .dzNew')
+        };
+      } catch (e) { return { err: String(e && e.message) }; }
+    },
+    openAch: function () { openAchPanel(); return !!$('dzAchPanel'); },
+    achPanelItems: function () { var p = $('dzAchPanel'); return p ? p.querySelectorAll('.apIt').length : -1; },
+    achPanelSub: function () { var p = $('dzAchPanel'); return p ? String(p.querySelector('.apSub').textContent || '') : null; },
+    achPanelShown: function () {
+      var p = $('dzAchPanel'); if (!p) return null;
+      try { return getComputedStyle(p).display !== 'none'; } catch (e) { return null; }
+    },
+    closeAch: function () {
+      var b = $('dzAchClose'); if (!b) return false;
+      try { b.dispatchEvent(new MouseEvent('click', { bubbles: true })); return true; } catch (e) { return false; }
+    },
+    achRowThere: function () { return !!$('dzAchRow'); }
+  };
+  WIN.__dzV21.diag = function () {
+    var store = achStore(), got = [], i;
+    for (i = 0; i < ACH.length; i++) if (store[ACH[i].id]) got.push(ACH[i].id);
+    return {
+      installed: ST.installed, range: ST.range, hw: ST.hw,
+      tier: tier(), score: Math.floor(score || 0), script: !!WIN.__scriptMode,
+      achGot: got, achTotal: ACH.length,
+      toast: !!$('dzAchToast'), achRow: !!$('dzAchRow'),
+      tutorialRows: (function () {
+        var list = $('settingsList'); if (!list) return -1;
+        var rows = list.querySelectorAll('.settingRow'), n = 0;
+        for (var j = 0; j < rows.length; j++) if ((rows[j].textContent || '').indexOf('查看教程') >= 0) n++;
+        return n;
+      })(),
+      yRange: (function () { try { var r = getYRange(); return [r.min, r.max, r.max - r.min]; } catch (e) { return null; } })()
+    };
+  };
+
+  setInterval(function () {
+    try { dedupeTutorialRows(); } catch (e) {}
+    try { ensureAchRow(); } catch (e) {}
+    try { var hp = $('hwPanel'); if (hp && !hp.classList.contains('hidden')) injectKnow(); } catch (e) {}
+    try { if (!ST.newHooked) hookNewButtons(); } catch (e) {}
+    try { syncNew(); } catch (e) {}
+  }, 300);
+  setInterval(function () { try { tickAch(); } catch (e) {} }, 500);
+
+  try { install(); } catch (e) { log('install 失败：' + (e && e.message)); }
+  setTimeout(function () { try { if (ST.installed.length < 8) install(); } catch (e) {} }, 300);
+})();
+
+
 /* ---------- src-parent/web_bgm.js ---------- */
-/* =========================================================================
-   定中project v2.0.5 · 网页版曲库（BGM 轮播）
-   -------------------------------------------------------------------------
-   作者要求：「主界面音乐用河北高考候场的那个茉莉花萨克斯，可以搞个轮播，做一个大曲库。」
-
-   那首曲子查清楚了：**Kenny G《Jasmine Flower》（茉莉花）** —— 河北高考/中考候场常放的那版萨克斯。
-   网易云 ID `1614707`。
-
-   ⚠ 所有内置外链都是**我一条条实测过**的（2026-10-04）：
-     请求 `https://music.163.com/song/media/outer/url?id=<ID>.mp3`，
-     看它 302 到哪儿 ——
-       · 落在 `m*.music.126.net`  → **真的能放** ✓ 收进曲库
-       · 落回 `music.163.com`     → 版权/VIP 拦截，放不出来 ✗ 一律不收
-     例：Kenny G 同一首歌的 `18940218`（另一张专辑）就属于后者，**被我把掉了**；
-         而 `1614707`（Love Ballads 版）能出 CDN，所以内置的是这一条。
-     这个接口是**非官方**的，随时可能限流/失效；失效了就在设置里换成你自己的链接。
-
-   ⚠ 作者追加要求：「除了茉莉花，只要那首经典萨克斯，记得过滤需要会员的。」→ 现在曲库 32 首：
-      · 萨克斯 3 首：Kenny G《茉莉花》+《昨日重现》+《夜来香》
-        （原来那 4 个茉莉花翻奏版本按作者意思**全删了**，只留经典那版）
-      · 点播 15 首：少年 / 无名的人 / 烟火里的尘埃 / 堕 / 江湖天涯客 / 我爱你中国 / 夜空中最亮的星 /
-        远山少年 / 游京 / 海阔天空 / 直到世界尽头 / See You Again / 亲爱的你啊 / 平凡之路 / 红蜻蜓
-      · 其他风格 3 首：战斗（纯音乐）/ 诀别书 / Two Steps From Hell《Victory》
-      · 游戏音乐 11 首（作者第二波点名：东方 / MC / 泰拉）：
-        东方 Project：Bad Apple!! / ナイト・オブ・ナイツ / U.N.オーエンは彼女なのか？
-        Minecraft：Sweden（Remix）/ Wet Hands（钢琴）/ Pigstep（Remix）/ Aria Math（Remix）
-        泰拉瑞亚：Overworld Day / Rain / The Tale of a Cruel World（灾厄）
-        另加 Undertale《MEGALOVANIA》—— 名字太响，顺手塞进来了
-      **需要会员（fee=1）的原唱一律不收**，换成实测能放的同曲版本：
-        无名的人→毛不易 Live；我爱你中国→卢卢快闭嘴；夜空中最亮的星→苏也莉；远山少年→潮汐老李；
-        游京→星火社长征版；直到世界尽头→猿川哲也全长翻奏；See You Again→Music Travel Love；
-        平凡之路→《四海》伙伴的歌；红蜻蜓→小虎队 2025 Remastered；
-        MC 的 C418/Lena Raine 原版全被 VIP 挡 → Sweden / Aria Math / Pigstep 用 Remix 或钢琴版替代。
-      ⚠ 父项目 URL_BGM 的 `add()` 原本写死「最多 10 首」，构建时放宽到 40（upgrade-parent.mjs ⑩c），
-        否则第 11 首之后会被静默丢掉。
-
-   音乐优先级（沿用父项目已有的 URL_BGM 通道，没有新造一套播放器）：
-     URL 参数 ?bgm=  >  本机保存（设置里那一行）  >  内嵌曲库清单  >  父项目内置合成 BGM
-   ========================================================================= */
+/* 定中project v2.0.5 · 网页版曲库（BGM 轮播） */
 ;(function () {
   'use strict';
 
@@ -16685,36 +17131,7 @@ requestAnimationFrame(loop);
 
 
 /* ---------- src-parent/visits.js ---------- */
-/* =========================================================================
-   定中project v2.0.5 · 网页版访问量统计（今日 / 历史）
-   -------------------------------------------------------------------------
-   作者要求：「为小游戏加入一个访问量统计，显示日访问量，历史访问量，以截至今天访问量为 6069 算。」
-
-   ⚠ 纯静态页（GitHub Pages）**自己数不了自己的访问量** —— 没有后端可以落库。所以借一个免费计数服务：
-        abacus.jasoncameron.dev        （2026-10-04 我实测过：CORS `*`、JSON、限 30 次/10 秒）
-          自增  GET /hit/<namespace>/<key>  → {"value":N}
-          读取  GET /get/<namespace>/<key>  → {"value":N}（key 不存在则 404 {"error":"Key not found"}）
-          key 必须匹配 ^[A-Za-z0-9_\-.]{3,64}$（所以 2026-10-04 这种带横杠的日期可以直接当 key）
-      另外两个更老的同类服务（api.countapi.xyz / api.counterapi.dev）都**已经挂了**，实测无响应，别用。
-
-   两个计数器，互不干扰：
-      total          —— 统计上线以来「新增」的访问（含本次）
-      d-YYYY-MM-DD   —— 当天的访问；key 里带日期，**自然按天重置，不需要任何定时任务**
-
-   展示口径：
-      今日访问 = d-<今天> 的值
-      历史访问 = 6069 + total - 1
-                 ↑ 减 1 的原因：/hit 返回的是「含本次」的值，而 6069 这个基线是作者给的
-                   「截至今天」的累计数，已经包含"上线那一刻"这次访问了。
-                   所以第一个访客看到的正好是 6069，第二个是 6070，符合直觉。
-
-   去重：sessionStorage 记一次，**同一标签页刷新不重复计数**（关掉标签页 = 新会话，会再计一次）。
-   时区：日期一律按 **UTC+8** 算，保证全国访客看到同一个"今天"，不会因为谁的电脑时区不对就错位。
-   兜底：每次成功都把数字缓存进 localStorage，请求失败就显示上次的缓存并标注「·离线」，
-        连缓存都没有就显示「统计暂不可用」——统计挂了绝不影响游戏本身。
-   隐私：计数请求是浏览器**直接**打给 abacus 的（不经过 GitHub，也不占 GitHub Pages 的流量），
-        对方会看到访客 IP；只发两个自增请求，不带任何游戏内数据。
-   ========================================================================= */
+/* 定中project v2.0.5 · 网页版访问量统计（今日 / 历史） */
 ;(function () {
   'use strict';
 
@@ -16983,7 +17400,7 @@ requestAnimationFrame(loop);
   log('访问量统计就绪：基线 ' + SEED + '（截至 ' + SEED_DAY + '）· namespace ' + NS);
 })();
 
-/* ==================== DZ 本体升级 v2.0.5 END ==================== */
+/* ==================== DZ 本体升级 v2.1 END ==================== */
 })();
 </script>
 
